@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { z } from "zod";
-import { createEvent } from "@/lib/events.functions";
+import { createEvent, geocodeSearch, geocodeReverse } from "@/lib/events.functions";
 import { toast } from "sonner";
 import { MapPin, Locate, Search } from "lucide-react";
 
