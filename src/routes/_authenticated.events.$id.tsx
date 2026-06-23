@@ -28,7 +28,7 @@ function EventDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("id, owner_id, name, event_date, location_label, lat, lng")
+        .select("id, owner_id, name, event_date, end_date, location_label, lat, lng")
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -109,19 +109,16 @@ function EventDetail() {
         {ev && (
           <>
             <h1 className="mt-3 font-display text-3xl tracking-tight">{ev.name}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <div className="mt-2 flex flex-wrap items-start gap-x-4 gap-y-1 text-sm text-muted-foreground">
               {ev.event_date && (
                 <span className="inline-flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5" />
-                  {format(new Date(ev.event_date), "d MMM yyyy", { locale: fr })}
+                  {ev.end_date && ev.end_date !== ev.event_date
+                    ? `${format(new Date(ev.event_date), "d MMM", { locale: fr })} – ${format(new Date(ev.end_date), "d MMM yyyy", { locale: fr })}`
+                    : format(new Date(ev.event_date), "d MMM yyyy", { locale: fr })}
                 </span>
               )}
-              {ev.location_label && (
-                <span className="inline-flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {ev.location_label}
-                </span>
-              )}
+              {ev.location_label && <AddressLabel label={ev.location_label} />}
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
