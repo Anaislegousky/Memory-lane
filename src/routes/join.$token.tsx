@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { redeemInvite } from "@/lib/invites.functions";
 import { toast } from "sonner";
 
@@ -15,6 +16,7 @@ function JoinPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const redeem = useServerFn(redeemInvite);
+  const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -23,15 +25,20 @@ function JoinPage() {
     if (!user) return;
     setBusy(true);
     redeem({ data: { token } })
-      .then((res: any) => {
+      .then(async (res: any) => {
         setDone(true);
+        await queryClient.invalidateQueries({ queryKey: ["events"] });
+        if (res?.event_id) {
+          await queryClient.invalidateQueries({ queryKey: ["event", res.event_id] });
+          await queryClient.invalidateQueries({ queryKey: ["event-members", res.event_id] });
+        }
         toast.success("C'est bon, vous êtes inscrit !");
         if (res?.event_id) navigate({ to: "/events/$id", params: { id: res.event_id } });
         else navigate({ to: "/events" });
       })
       .catch((err) => toast.error(err?.message || "Impossible d'accepter l'invitation"))
       .finally(() => setBusy(false));
-  }, [user, loading, token, redeem, navigate, done]);
+  }, [user, loading, token, redeem, navigate, done, queryClient]);
 
   if (!loading && !user) {
     const redirect = `/join/${token}`;
