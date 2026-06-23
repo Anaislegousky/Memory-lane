@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const createEventInput = z.object({
   name: z.string().trim().min(2).max(80),
   event_date: z.string().optional().nullable(),
+  end_date: z.string().optional().nullable(),
   location_label: z.string().trim().max(200).optional().nullable(),
   lat: z.number().nullable(),
   lng: z.number().nullable(),
@@ -22,6 +23,7 @@ export const createEvent = createServerFn({ method: "POST" })
         owner_id: context.userId,
         name: data.name,
         event_date: data.event_date || null,
+        end_date: data.end_date || null,
         location_label: data.location_label || null,
         lat: data.lat,
         lng: data.lng,
