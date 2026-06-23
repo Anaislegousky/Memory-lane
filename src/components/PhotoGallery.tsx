@@ -324,19 +324,22 @@ function Lightbox({
     return () => window.removeEventListener("keydown", onKey);
   }, [prev, next, onClose]);
 
-  // touch swipe
-  const [touchX, setTouchX] = useState<number | null>(null);
+  // touch swipe (track X & Y so vertical scrolls aren't hijacked)
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
   function onTouchStart(e: React.TouchEvent) {
-    setTouchX(e.touches[0].clientX);
+    const t = e.touches[0];
+    setTouchStart({ x: t.clientX, y: t.clientY });
   }
   function onTouchEnd(e: React.TouchEvent) {
-    if (touchX == null) return;
-    const dx = e.changedTouches[0].clientX - touchX;
-    if (Math.abs(dx) > 50) {
+    if (!touchStart) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStart.x;
+    const dy = t.clientY - touchStart.y;
+    setTouchStart(null);
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
       if (dx > 0) prev();
       else next();
     }
-    setTouchX(null);
   }
 
   async function toggleTag(userId: string) {
@@ -400,24 +403,31 @@ function Lightbox({
         </div>
       </div>
       <div
-        className="relative flex-1 overflow-hidden"
+        className="relative flex-1 overflow-hidden touch-pan-y select-none"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        {url && <img src={url} alt="" className="h-full w-full object-contain" />}
+        {url && (
+          <img
+            src={url}
+            alt=""
+            draggable={false}
+            className="pointer-events-none h-full w-full object-contain"
+          />
+        )}
         {photos.length > 1 && (
           <>
             <button
               onClick={prev}
               aria-label="Précédente"
-              className="absolute left-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/10 p-2 text-white sm:block"
+              className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white backdrop-blur-sm hover:bg-white/20"
             >
               <ChevronLeft className="h-6 w-6" />
             </button>
             <button
               onClick={next}
               aria-label="Suivante"
-              className="absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/10 p-2 text-white sm:block"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white backdrop-blur-sm hover:bg-white/20"
             >
               <ChevronRight className="h-6 w-6" />
             </button>
