@@ -38,7 +38,7 @@ function JoinPage() {
       })
       .catch((err) => toast.error(err?.message || "Impossible d'accepter l'invitation"))
       .finally(() => setBusy(false));
-  }, [user, loading, token, redeem, navigate, done]);
+  }, [user, loading, token, redeem, navigate, done, queryClient]);
 
   if (!loading && !user) {
     const redirect = `/join/${token}`;
