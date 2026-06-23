@@ -66,6 +66,21 @@ function NewEventPage() {
     }
   }
 
+  async function insertEvent(ownerId: string, v: { name: string; event_date?: string; location_label?: string }) {
+    return supabase
+      .from("events")
+      .insert({
+        owner_id: ownerId,
+        name: v.name,
+        event_date: v.event_date || null,
+        location_label: v.location_label || null,
+        lat: loc.lat,
+        lng: loc.lng,
+      })
+      .select("id")
+      .single();
+  }
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!user) return;
@@ -77,21 +92,36 @@ function NewEventPage() {
         event_date: fd.get("event_date") || undefined,
         location_label: loc.label || (fd.get("location_label") as string) || "",
       });
-      const { data, error } = await supabase
-        .from("events")
-        .insert({
-          owner_id: user.id,
-          name: v.name,
-          event_date: v.event_date || null,
-          location_label: v.location_label || null,
-          lat: loc.lat,
-          lng: loc.lng,
-        })
-        .select("id")
-        .single();
+
+      // Rafraîchit la session pour éviter une erreur RLS due à un JWT expiré/obsolète
+      const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
+      let ownerId = refreshed?.user?.id ?? user.id;
+      if (refreshErr) {
+        const { data: got } = await supabase.auth.getUser();
+        if (got?.user?.id) ownerId = got.user.id;
+      }
+
+      let { data, error } = await insertEvent(ownerId, v);
+
+      // Si RLS rejette, on retente une fois après un refresh forcé
+      if (error && /row-level security|row level security|JWT|permission/i.test(error.message)) {
+        await supabase.auth.refreshSession();
+        const retry = await insertEvent(ownerId, v);
+        data = retry.data;
+        error = retry.error;
+      }
+
+      // Dernier recours : déconnexion pour forcer une nouvelle authentification
+      if (error && /row-level security|row level security|JWT/i.test(error.message)) {
+        toast.error("Session expirée, merci de vous reconnecter");
+        await supabase.auth.signOut();
+        navigate({ to: "/auth" });
+        return;
+      }
+
       if (error) throw error;
       toast.success("Événement créé");
-      navigate({ to: "/events/$id", params: { id: data.id } });
+      navigate({ to: "/events/$id", params: { id: data!.id } });
     } catch (err: any) {
       toast.error(err?.message || "Impossible de créer l'événement");
     } finally {
