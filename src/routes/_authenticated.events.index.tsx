@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { Plus, MapPin, Calendar } from "lucide-react";
 import { format } from "date-fns";
 
-export const Route = createFileRoute("/_authenticated/events")({
+export const Route = createFileRoute("/_authenticated/events/")({
   head: () => ({ meta: [{ title: "Your events — Memories" }] }),
   component: EventsPage,
 });

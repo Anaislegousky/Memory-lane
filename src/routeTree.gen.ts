@@ -16,7 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedMapRouteImport } from './routes/_authenticated.map'
-import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated.events'
+import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated.events.index'
 import { Route as AuthenticatedEventsNewRouteImport } from './routes/_authenticated.events.new'
 import { Route as AuthenticatedEventsIdRouteImport } from './routes/_authenticated.events.$id'
 import { Route as ApiPublicHooksCleanupPhotosRouteImport } from './routes/api/public/hooks/cleanup-photos'
@@ -55,20 +55,21 @@ const AuthenticatedMapRoute = AuthenticatedMapRouteImport.update({
   path: '/map',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedEventsRoute = AuthenticatedEventsRouteImport.update({
-  id: '/events',
-  path: '/events',
+const AuthenticatedEventsIndexRoute =
+  AuthenticatedEventsIndexRouteImport.update({
+    id: '/events/',
+    path: '/events/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEventsNewRoute = AuthenticatedEventsNewRouteImport.update({
+  id: '/events/new',
+  path: '/events/new',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedEventsNewRoute = AuthenticatedEventsNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AuthenticatedEventsRoute,
-} as any)
 const AuthenticatedEventsIdRoute = AuthenticatedEventsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AuthenticatedEventsRoute,
+  id: '/events/$id',
+  path: '/events/$id',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const ApiPublicHooksCleanupPhotosRoute =
   ApiPublicHooksCleanupPhotosRouteImport.update({
@@ -81,24 +82,24 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
-  '/events': typeof AuthenticatedEventsRouteWithChildren
   '/map': typeof AuthenticatedMapRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/join/$token': typeof JoinTokenRoute
   '/events/$id': typeof AuthenticatedEventsIdRoute
   '/events/new': typeof AuthenticatedEventsNewRoute
+  '/events/': typeof AuthenticatedEventsIndexRoute
   '/api/public/hooks/cleanup-photos': typeof ApiPublicHooksCleanupPhotosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
-  '/events': typeof AuthenticatedEventsRouteWithChildren
   '/map': typeof AuthenticatedMapRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/join/$token': typeof JoinTokenRoute
   '/events/$id': typeof AuthenticatedEventsIdRoute
   '/events/new': typeof AuthenticatedEventsNewRoute
+  '/events': typeof AuthenticatedEventsIndexRoute
   '/api/public/hooks/cleanup-photos': typeof ApiPublicHooksCleanupPhotosRoute
 }
 export interface FileRoutesById {
@@ -107,12 +108,12 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
-  '/_authenticated/events': typeof AuthenticatedEventsRouteWithChildren
   '/_authenticated/map': typeof AuthenticatedMapRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/join/$token': typeof JoinTokenRoute
   '/_authenticated/events/$id': typeof AuthenticatedEventsIdRoute
   '/_authenticated/events/new': typeof AuthenticatedEventsNewRoute
+  '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
   '/api/public/hooks/cleanup-photos': typeof ApiPublicHooksCleanupPhotosRoute
 }
 export interface FileRouteTypes {
@@ -121,24 +122,24 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/privacy'
-    | '/events'
     | '/map'
     | '/profile'
     | '/join/$token'
     | '/events/$id'
     | '/events/new'
+    | '/events/'
     | '/api/public/hooks/cleanup-photos'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/privacy'
-    | '/events'
     | '/map'
     | '/profile'
     | '/join/$token'
     | '/events/$id'
     | '/events/new'
+    | '/events'
     | '/api/public/hooks/cleanup-photos'
   id:
     | '__root__'
@@ -146,12 +147,12 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/privacy'
-    | '/_authenticated/events'
     | '/_authenticated/map'
     | '/_authenticated/profile'
     | '/join/$token'
     | '/_authenticated/events/$id'
     | '/_authenticated/events/new'
+    | '/_authenticated/events/'
     | '/api/public/hooks/cleanup-photos'
   fileRoutesById: FileRoutesById
 }
@@ -215,26 +216,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMapRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/events': {
-      id: '/_authenticated/events'
+    '/_authenticated/events/': {
+      id: '/_authenticated/events/'
       path: '/events'
-      fullPath: '/events'
-      preLoaderRoute: typeof AuthenticatedEventsRouteImport
+      fullPath: '/events/'
+      preLoaderRoute: typeof AuthenticatedEventsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/events/new': {
       id: '/_authenticated/events/new'
-      path: '/new'
+      path: '/events/new'
       fullPath: '/events/new'
       preLoaderRoute: typeof AuthenticatedEventsNewRouteImport
-      parentRoute: typeof AuthenticatedEventsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/events/$id': {
       id: '/_authenticated/events/$id'
-      path: '/$id'
+      path: '/events/$id'
       fullPath: '/events/$id'
       preLoaderRoute: typeof AuthenticatedEventsIdRouteImport
-      parentRoute: typeof AuthenticatedEventsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/api/public/hooks/cleanup-photos': {
       id: '/api/public/hooks/cleanup-photos'
@@ -246,29 +247,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedEventsRouteChildren {
-  AuthenticatedEventsIdRoute: typeof AuthenticatedEventsIdRoute
-  AuthenticatedEventsNewRoute: typeof AuthenticatedEventsNewRoute
-}
-
-const AuthenticatedEventsRouteChildren: AuthenticatedEventsRouteChildren = {
-  AuthenticatedEventsIdRoute: AuthenticatedEventsIdRoute,
-  AuthenticatedEventsNewRoute: AuthenticatedEventsNewRoute,
-}
-
-const AuthenticatedEventsRouteWithChildren =
-  AuthenticatedEventsRoute._addFileChildren(AuthenticatedEventsRouteChildren)
-
 interface AuthenticatedRouteChildren {
-  AuthenticatedEventsRoute: typeof AuthenticatedEventsRouteWithChildren
   AuthenticatedMapRoute: typeof AuthenticatedMapRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedEventsIdRoute: typeof AuthenticatedEventsIdRoute
+  AuthenticatedEventsNewRoute: typeof AuthenticatedEventsNewRoute
+  AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedEventsRoute: AuthenticatedEventsRouteWithChildren,
   AuthenticatedMapRoute: AuthenticatedMapRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedEventsIdRoute: AuthenticatedEventsIdRoute,
+  AuthenticatedEventsNewRoute: AuthenticatedEventsNewRoute,
+  AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
