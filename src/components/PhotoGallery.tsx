@@ -153,18 +153,21 @@ export function PhotoGallery({
     }
   }
 
-  async function deleteSelected() {
+  async function performDelete() {
     const toDelete = photos.filter((p) => selected.has(p.id) && (isOwner || p.uploader_id === user?.id));
     if (!toDelete.length) return;
-    if (!confirm(`Supprimer ${toDelete.length} photo(s) ?`)) return;
     const paths = toDelete.map((p) => p.storage_path);
     await supabase.storage.from("event-photos").remove(paths);
     const { error } = await supabase.from("photos").delete().in("id", toDelete.map((p) => p.id));
     if (error) return toast.error(error.message);
     toast.success("Supprimées");
+    setConfirmDelete(false);
     exitSelect();
     onChange();
   }
+
+  const deletableCount = photos.filter((p) => selected.has(p.id) && (isOwner || p.uploader_id === user?.id)).length;
+
 
   if (!photos.length) {
     return (
