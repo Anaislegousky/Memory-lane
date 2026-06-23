@@ -35,6 +35,7 @@ function EventDetail() {
   const navigate = useNavigate();
   const [shareOpen, setShareOpen] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const eventQ = useQuery({
     queryKey: ["event", id],
