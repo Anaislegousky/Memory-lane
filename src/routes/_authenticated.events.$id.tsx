@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useState } from "react";
 import { toast } from "sonner";
+import { shortAddress } from "@/lib/format-address";
 
 export const Route = createFileRoute("/_authenticated/events/$id")({
   head: () => ({ meta: [{ title: "Événement — Memories" }] }),
@@ -176,7 +177,7 @@ function EventDetail() {
 
 function AddressLabel({ label }: { label: string }) {
   const [expanded, setExpanded] = useState(false);
-  const short = label.split(",")[0].trim();
+  const short = shortAddress(label);
   const hasMore = short.length < label.length;
   return (
     <button
