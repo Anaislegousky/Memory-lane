@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { CreateMenu } from "@/components/CreateMenu";
 import { Plus, MapPin, Calendar, AlertTriangle } from "lucide-react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -14,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/events/")({
 });
 
 function EventsPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const { data: events, isLoading } = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
@@ -34,13 +37,13 @@ function EventsPage() {
     <AppShell
       title="Événements"
       action={
-        <Link
-          to="/events/new"
-          aria-label="Créer un événement"
+        <button
+          onClick={() => setMenuOpen(true)}
+          aria-label="Ajouter"
           className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground"
         >
           <Plus className="h-5 w-5" />
-        </Link>
+        </button>
       }
     >
       {!!expiringQ.data?.length && (
@@ -103,13 +106,15 @@ function EventsPage() {
         </ul>
       )}
 
-      <Link
-        to="/events/new"
-        aria-label="Créer un événement"
+      <button
+        onClick={() => setMenuOpen(true)}
+        aria-label="Ajouter"
         className="fixed bottom-24 right-4 z-20 inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95"
       >
         <Plus className="h-6 w-6" />
-      </Link>
+      </button>
+
+      <CreateMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </AppShell>
   );
 }
