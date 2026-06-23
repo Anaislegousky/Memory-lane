@@ -16,8 +16,15 @@ type Loc = { label: string; lat: number | null; lng: number | null };
 const schema = z.object({
   name: z.string().trim().min(2).max(80),
   event_date: z.string().optional(),
+  end_date: z.string().optional(),
   location_label: z.string().trim().max(200).optional().or(z.literal("")),
 });
+
+const todayISO = () => {
+  const d = new Date();
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+};
 
 function NewEventPage() {
   const navigate = useNavigate();
@@ -27,6 +34,9 @@ function NewEventPage() {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
   const [searching, setSearching] = useState(false);
+  const [multiDay, setMultiDay] = useState(false);
+  const [startDate, setStartDate] = useState(todayISO());
+  const [endDate, setEndDate] = useState(todayISO());
 
   async function useMyLocation() {
     if (!("geolocation" in navigator)) {
