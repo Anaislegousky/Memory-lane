@@ -6,18 +6,10 @@ import { PhotoUploader } from "@/components/PhotoUploader";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { InviteShareSheet } from "@/components/InviteShareSheet";
 import { BottomNav } from "@/components/BottomNav";
-import {
-  ChevronLeft,
-  MapPin,
-  Calendar,
-  Trash2,
-  UserPlus,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { ChevronLeft, MapPin, Calendar, Trash2, UserPlus, X } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { shortAddress } from "@/lib/format-address";
 
@@ -41,6 +33,7 @@ function EventDetail() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [shareOpen, setShareOpen] = useState(false);
+  const [membersOpen, setMembersOpen] = useState(false);
 
   const eventQ = useQuery({
     queryKey: ["event", id],
@@ -123,23 +116,46 @@ function EventDetail() {
   const members = membersQ.data ?? [];
   const photoCount = photosQ.data?.length ?? 0;
 
+  // Shrink title if it wraps to more than 2 lines
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const [smallTitle, setSmallTitle] = useState(false);
+  useLayoutEffect(() => {
+    const el = titleRef.current;
+    if (!el || !ev?.name) return;
+    setSmallTitle(false);
+    requestAnimationFrame(() => {
+      if (!titleRef.current) return;
+      const lh = parseFloat(getComputedStyle(titleRef.current).lineHeight) || 28;
+      const lines = Math.round(titleRef.current.scrollHeight / lh);
+      if (lines > 2) setSmallTitle(true);
+    });
+  }, [ev?.name]);
+
+  const dateLabel =
+    ev?.event_date
+      ? ev.end_date && ev.end_date !== ev.event_date
+        ? `${format(new Date(ev.event_date), "d MMM", { locale: fr })} – ${format(new Date(ev.end_date), "d MMM yyyy", { locale: fr })}`
+        : format(new Date(ev.event_date), "d MMM yyyy", { locale: fr })
+      : null;
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="mx-auto max-w-md">
         {/* Top nav */}
-        <div className="flex items-center justify-between px-4 pt-3">
+        <div className="flex items-center justify-between px-3 pt-2">
           <Link
             to="/events"
-            aria-label="Retour"
-            className="-ml-2 inline-flex h-10 w-10 items-center justify-center rounded-full text-foreground hover:bg-accent/60"
+            aria-label="Retour aux événements"
+            className="-ml-1 inline-flex items-center gap-1 rounded-full py-2 pl-1 pr-3 text-sm font-medium text-foreground hover:bg-accent/60"
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft className="h-5 w-5" />
+            <span>Retour</span>
           </Link>
           {isOwner && (
             <button
               onClick={deleteEvent}
               aria-label="Supprimer l'événement"
-              className="-mr-2 inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
             >
               <Trash2 className="h-5 w-5" />
             </button>
@@ -149,63 +165,73 @@ function EventDetail() {
         {ev && (
           <>
             {/* Title + meta */}
-            <div className="px-5 pt-2">
-              <h1 className="font-display text-3xl leading-tight tracking-tight">{ev.name}</h1>
-              <div className="mt-3 space-y-1.5 text-base text-muted-foreground">
-                {ev.event_date && (
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 flex-shrink-0" />
-                    <span>
-                      {ev.end_date && ev.end_date !== ev.event_date
-                        ? `${format(new Date(ev.event_date), "d MMM", { locale: fr })} – ${format(new Date(ev.end_date), "d MMM yyyy", { locale: fr })}`
-                        : format(new Date(ev.event_date), "d MMMM yyyy", { locale: fr })}
+            <div className="px-5 pt-1">
+              <h1
+                ref={titleRef}
+                className={
+                  "font-display leading-tight tracking-tight " +
+                  (smallTitle ? "text-xl" : "text-2xl")
+                }
+              >
+                {ev.name}
+              </h1>
+              {(dateLabel || ev.location_label) && (
+                <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+                  {dateLabel && (
+                    <span className="flex shrink-0 items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {dateLabel}
                     </span>
-                  </div>
-                )}
-                {ev.location_label && <AddressLabel label={ev.location_label} />}
-              </div>
+                  )}
+                  {dateLabel && ev.location_label && (
+                    <span className="text-muted-foreground/50">·</span>
+                  )}
+                  {ev.location_label && (
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{shortAddress(ev.location_label)}</span>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Actions */}
-            <div className="mt-6 flex items-center gap-2.5 px-5">
+            {/* Actions + members on one row */}
+            <div className="mt-3 flex items-center gap-2 px-5">
               <PhotoUploader eventId={ev.id} onUploaded={() => photosQ.refetch()} />
               <button
                 onClick={() => setShareOpen(true)}
                 aria-label="Inviter des amis"
                 title="Inviter"
-                className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-accent-foreground transition active:scale-[0.98]"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground transition active:scale-[0.98]"
               >
                 <UserPlus className="h-5 w-5" />
               </button>
-            </div>
-
-            {/* Members */}
-            {!!members.length && (
-              <div className="mt-5 flex items-center gap-3 px-5">
-                <div className="flex -space-x-2">
-                  {members.slice(0, 4).map((m) => (
-                    <div
+              {!!members.length && (
+                <button
+                  onClick={() => setMembersOpen(true)}
+                  aria-label={`${members.length} participant${members.length > 1 ? "s" : ""}`}
+                  className="ml-auto flex shrink-0 items-center -space-x-2 rounded-full p-1 transition hover:bg-accent/60"
+                >
+                  {members.slice(0, 3).map((m) => (
+                    <span
                       key={m.user_id}
-                      title={m.display_name}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-background bg-secondary text-xs font-semibold text-secondary-foreground"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-secondary text-[11px] font-semibold text-secondary-foreground"
                     >
                       {initials(m.display_name)}
-                    </div>
+                    </span>
                   ))}
-                  {members.length > 4 && (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-background bg-muted text-[11px] font-semibold text-muted-foreground">
-                      +{members.length - 4}
-                    </div>
+                  {members.length > 3 && (
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-semibold text-muted-foreground">
+                      +{members.length - 3}
+                    </span>
                   )}
-                </div>
-                <span className="text-sm text-muted-foreground">
-                  {members.length} participant{members.length > 1 ? "s" : ""}
-                </span>
-              </div>
-            )}
+                </button>
+              )}
+            </div>
 
             {/* Gallery section */}
-            <div className="mt-8 rounded-t-[2rem] bg-accent/40 pb-8 pt-6">
+            <div className="mt-4 rounded-t-[2rem] bg-accent/40 pb-8 pt-5">
               <PhotoGallery
                 photos={photosQ.data ?? []}
                 members={members.map((m) => ({ user_id: m.user_id, display_name: m.display_name }))}
@@ -222,6 +248,17 @@ function EventDetail() {
         )}
       </div>
 
+      {membersOpen && (
+        <MembersSheet
+          members={members}
+          onClose={() => setMembersOpen(false)}
+          onInvite={() => {
+            setMembersOpen(false);
+            setShareOpen(true);
+          }}
+        />
+      )}
+
       {shareOpen && ev && (
         <InviteShareSheet scope="event" eventId={ev.id} onClose={() => setShareOpen(false)} />
       )}
@@ -230,25 +267,55 @@ function EventDetail() {
   );
 }
 
-function AddressLabel({ label }: { label: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const short = shortAddress(label);
-  const hasMore = short.length < label.length;
+function MembersSheet({
+  members,
+  onClose,
+  onInvite,
+}: {
+  members: { user_id: string; display_name: string; role: string }[];
+  onClose: () => void;
+  onInvite: () => void;
+}) {
   return (
-    <button
-      type="button"
-      onClick={() => hasMore && setExpanded((v) => !v)}
-      className="flex items-center gap-2 text-left"
-    >
-      <MapPin className="h-4 w-4 flex-shrink-0" />
-      <span>
-        {expanded ? label : short}
-        {hasMore && (
-          <span className="ml-1 inline-flex items-center align-middle text-muted-foreground/70">
-            {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-          </span>
-        )}
-      </span>
-    </button>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-t-3xl bg-background p-5 pb-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">
+            {members.length} participant{members.length > 1 ? "s" : ""}
+          </h2>
+          <button
+            onClick={onClose}
+            aria-label="Fermer"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <ul className="max-h-[50vh] space-y-1 overflow-auto">
+          {members.map((m) => (
+            <li key={m.user_id} className="flex items-center gap-3 rounded-xl px-2 py-2">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
+                {initials(m.display_name)}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-sm font-medium">{m.display_name}</span>
+              {m.role === "owner" && (
+                <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
+                  Organisateur
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+        <button
+          onClick={onInvite}
+          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-sm font-medium text-primary-foreground"
+        >
+          <UserPlus className="h-4 w-4" /> Inviter des amis
+        </button>
+      </div>
+    </div>
   );
 }
