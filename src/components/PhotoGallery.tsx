@@ -317,6 +317,11 @@ export function PhotoGallery({
           onIndex={setOpenIdx}
           onClose={() => setOpenIdx(null)}
           onChange={onChange}
+          onSelect={(id) => {
+            setSelectMode(true);
+            setSelected(new Set([id]));
+            setOpenIdx(null);
+          }}
         />
       )}
     </>
