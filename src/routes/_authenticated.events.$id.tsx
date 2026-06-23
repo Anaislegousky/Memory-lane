@@ -139,13 +139,22 @@ function EventDetail() {
             <span>Retour</span>
           </Link>
           {isOwner && (
-            <button
-              onClick={deleteEvent}
-              aria-label="Supprimer l'événement"
-              className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-            >
-              <Trash2 className="h-5 w-5" />
-            </button>
+            <div className="-mr-1 flex items-center gap-1">
+              <button
+                onClick={() => setEditOpen(true)}
+                aria-label="Modifier l'événement"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
+              >
+                <Pencil className="h-5 w-5" />
+              </button>
+              <button
+                onClick={deleteEvent}
+                aria-label="Supprimer l'événement"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </div>
           )}
         </div>
 
