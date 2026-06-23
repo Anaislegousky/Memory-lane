@@ -4,8 +4,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Link } from "@tanstack/react-router";
 
-// Fix default marker icons in bundlers
-const icon = L.icon({
+// Fallback pin icon (no thumbnail)
+const fallbackIcon = L.icon({
   iconUrl: "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl: "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   shadowUrl: "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-shadow.png",
@@ -15,7 +15,21 @@ const icon = L.icon({
   shadowSize: [41, 41],
 });
 
-type Pin = { id: string; name: string; lat: number; lng: number };
+function thumbIcon(url: string) {
+  return L.divIcon({
+    className: "memories-thumb-pin",
+    html: `<div style="
+      width:54px;height:54px;border-radius:9999px;overflow:hidden;
+      border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.25);
+      background:#eee;
+    "><img src="${url}" style="width:100%;height:100%;object-fit:cover;display:block" alt=""/></div>`,
+    iconSize: [54, 54],
+    iconAnchor: [27, 27],
+    popupAnchor: [0, -28],
+  });
+}
+
+type Pin = { id: string; name: string; lat: number; lng: number; thumb?: string | null };
 
 function Fit({ pins }: { pins: Pin[] }) {
   const map = useMap();
@@ -36,7 +50,11 @@ export default function EventMap({ pins }: { pins: Pin[] }) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {pins.map((p) => (
-        <Marker key={p.id} position={[p.lat, p.lng]} icon={icon}>
+        <Marker
+          key={p.id}
+          position={[p.lat, p.lng]}
+          icon={p.thumb ? thumbIcon(p.thumb) : fallbackIcon}
+        >
           <Popup>
             <Link to="/events/$id" params={{ id: p.id }} className="font-medium">
               {p.name}
