@@ -67,7 +67,7 @@ export function InviteShareSheet({
           <h3 className="font-display text-xl">
             {scope === "event" ? "Inviter à cet événement" : "Inviter un ami"}
           </h3>
-          <button onClick={onClose}><X className="h-5 w-5" /></button>
+          <button onClick={onClose} aria-label="Fermer"><X className="h-5 w-5" /></button>
         </div>
         <p className="text-sm text-muted-foreground">
           {scope === "event"

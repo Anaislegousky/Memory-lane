@@ -64,6 +64,7 @@ export function PhotoGallery({
             <button
               key={p.id}
               onClick={() => setOpen(p)}
+              aria-label="Voir la photo"
               className="relative aspect-square overflow-hidden rounded-lg bg-muted"
             >
               {u && (
@@ -148,7 +149,7 @@ function Lightbox({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/95">
       <div className="flex items-center justify-between px-4 py-3 text-white">
-        <button onClick={onClose} className="rounded-full p-2"><X className="h-5 w-5" /></button>
+        <button onClick={onClose} aria-label="Fermer" className="rounded-full p-2"><X className="h-5 w-5" /></button>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowTags((s) => !s)}
@@ -157,7 +158,7 @@ function Lightbox({
             <TagIcon className="h-4 w-4" /> Identifier
           </button>
           {canDelete && (
-            <button onClick={deletePhoto} className="rounded-full bg-white/10 p-2">
+            <button onClick={deletePhoto} aria-label="Supprimer la photo" className="rounded-full bg-white/10 p-2">
               <Trash2 className="h-4 w-4" />
             </button>
           )}
