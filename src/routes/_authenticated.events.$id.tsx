@@ -258,6 +258,14 @@ function EventDetail() {
       {shareOpen && ev && (
         <InviteShareSheet scope="event" eventId={ev.id} onClose={() => setShareOpen(false)} />
       )}
+
+      {editOpen && ev && (
+        <EventEditSheet
+          ev={ev}
+          onClose={() => setEditOpen(false)}
+          onSaved={() => eventQ.refetch()}
+        />
+      )}
       <BottomNav />
     </div>
   );
