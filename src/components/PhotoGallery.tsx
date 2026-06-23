@@ -339,6 +339,7 @@ function Lightbox({
   onIndex,
   onClose,
   onChange,
+  onSelect,
 }: {
   photos: Photo[];
   index: number;
@@ -350,6 +351,7 @@ function Lightbox({
   onIndex: (i: number) => void;
   onClose: () => void;
   onChange: () => void;
+  onSelect: (id: string) => void;
 }) {
   const photo = photos[index];
   const url = urls.get(photo.storage_path);
