@@ -9,7 +9,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { ChevronLeft, MapPin, Calendar, Trash2, UserPlus, X } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { shortAddress } from "@/lib/format-address";
 
