@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -283,15 +283,16 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
 
 function PhotoThumb({ file }: { file: File }) {
   const [url, setUrl] = useState<string | null>(null);
-  if (url === null) {
+  useEffect(() => {
     const u = URL.createObjectURL(file);
     setUrl(u);
-  }
+    return () => URL.revokeObjectURL(u);
+  }, [file]);
   return (
     <img
       src={url ?? undefined}
       alt=""
-      className="h-14 w-14 flex-shrink-0 rounded-lg object-cover"
+      className="h-14 w-14 flex-shrink-0 rounded-lg object-cover bg-accent"
     />
   );
 }
