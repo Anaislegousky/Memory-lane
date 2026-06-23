@@ -196,7 +196,7 @@ export function PhotoGallery({
                 onClick={exitSelect}
                 className="rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-background/70"
               >
-                Annuler
+                Désélectionner
               </button>
               <span className="text-sm text-muted-foreground">
                 {selected.size} sélectionnée{selected.size > 1 ? "s" : ""}
