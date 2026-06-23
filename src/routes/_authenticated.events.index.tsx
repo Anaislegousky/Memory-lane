@@ -2,9 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
-import { Plus, MapPin, Calendar } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, MapPin, Calendar, AlertTriangle } from "lucide-react";
+import { format, formatDistanceToNowStrict } from "date-fns";
 import { fr } from "date-fns/locale";
+import { shortAddress } from "@/lib/format-address";
+import { useExpiringPhotos, useNotifyExpiring } from "@/lib/use-expiring-photos";
 
 export const Route = createFileRoute("/_authenticated/events/")({
   head: () => ({ meta: [{ title: "Vos événements — Memories" }] }),
@@ -25,8 +27,46 @@ function EventsPage() {
     },
   });
 
+  const expiringQ = useExpiringPhotos();
+  useNotifyExpiring(expiringQ.data);
+
   return (
-    <AppShell title="Événements">
+    <AppShell
+      title="Événements"
+      action={
+        <Link
+          to="/events/new"
+          aria-label="Créer un événement"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground"
+        >
+          <Plus className="h-5 w-5" />
+        </Link>
+      }
+    >
+      {!!expiringQ.data?.length && (
+        <div className="mb-3 space-y-2">
+          {expiringQ.data.map((ev) => (
+            <Link
+              key={ev.event_id}
+              to="/events/$id"
+              params={{ id: ev.event_id }}
+              className="flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 p-3 text-sm"
+            >
+              <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-destructive" />
+              <div>
+                <p className="font-medium">
+                  {ev.photo_count} photo{ev.photo_count > 1 ? "s" : ""} de « {ev.event_name} »
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Suppression dans{" "}
+                  {formatDistanceToNowStrict(new Date(ev.earliest_expiry), { locale: fr })}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Chargement…</p>
       ) : !events?.length ? (
@@ -53,7 +93,7 @@ function EventsPage() {
                   {e.location_label && (
                     <span className="inline-flex items-center gap-1">
                       <MapPin className="h-3.5 w-3.5" />
-                      {e.location_label.split(",")[0].trim()}
+                      {shortAddress(e.location_label)}
                     </span>
                   )}
                 </div>
@@ -62,6 +102,14 @@ function EventsPage() {
           ))}
         </ul>
       )}
+
+      <Link
+        to="/events/new"
+        aria-label="Créer un événement"
+        className="fixed bottom-24 right-4 z-20 inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95"
+      >
+        <Plus className="h-6 w-6" />
+      </Link>
     </AppShell>
   );
 }
@@ -70,10 +118,12 @@ function EmptyState() {
   return (
     <div className="mt-16 text-center">
       <p className="font-display text-2xl">Aucun événement pour l'instant</p>
-      <p className="mt-2 text-sm text-muted-foreground">Créez votre premier événement pour commencer à rassembler des photos avec vos amis.</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Créez votre premier événement pour commencer à rassembler des photos avec vos amis.
+      </p>
       <Link
         to="/events/new"
-        className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-muted text-sm font-medium text-primary-foreground"
+        className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
       >
         <Plus className="h-4 w-4" /> Créer un événement
       </Link>
