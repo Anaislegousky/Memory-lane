@@ -208,7 +208,7 @@ function NewEventPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        setLoc({ label: r.display_name, lat: parseFloat(r.lat), lng: parseFloat(r.lon) });
+                        setLoc({ label: r.display_name, lat: r.lat, lng: r.lng });
                         setResults([]);
                         setSearch("");
                       }}
