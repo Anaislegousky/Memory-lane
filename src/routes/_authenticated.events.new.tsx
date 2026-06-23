@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/components/AuthProvider";
+import { createEvent } from "@/lib/events.functions";
 import { toast } from "sonner";
 import { MapPin, Locate, Search } from "lucide-react";
 
@@ -20,8 +20,8 @@ const schema = z.object({
 });
 
 function NewEventPage() {
-  const { user } = useAuth();
   const navigate = useNavigate();
+  const createEventFn = useServerFn(createEvent);
   const [loc, setLoc] = useState<Loc>({ label: "", lat: null, lng: null });
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState("");
@@ -66,24 +66,8 @@ function NewEventPage() {
     }
   }
 
-  async function insertEvent(ownerId: string, v: { name: string; event_date?: string; location_label?: string }) {
-    return supabase
-      .from("events")
-      .insert({
-        owner_id: ownerId,
-        name: v.name,
-        event_date: v.event_date || null,
-        location_label: v.location_label || null,
-        lat: loc.lat,
-        lng: loc.lng,
-      })
-      .select("id")
-      .single();
-  }
-
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!user) return;
     const fd = new FormData(e.currentTarget);
     setBusy(true);
     try {
@@ -93,37 +77,25 @@ function NewEventPage() {
         location_label: loc.label || (fd.get("location_label") as string) || "",
       });
 
-      // Rafraîchit la session pour éviter une erreur RLS due à un JWT expiré/obsolète
-      const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
-      let ownerId = refreshed?.user?.id ?? user.id;
-      if (refreshErr) {
-        const { data: got } = await supabase.auth.getUser();
-        if (got?.user?.id) ownerId = got.user.id;
-      }
+      const data = await createEventFn({
+        data: {
+          name: v.name,
+          event_date: v.event_date || null,
+          location_label: v.location_label || null,
+          lat: loc.lat,
+          lng: loc.lng,
+        },
+      });
 
-      let { data, error } = await insertEvent(ownerId, v);
-
-      // Si RLS rejette, on retente une fois après un refresh forcé
-      if (error && /row-level security|row level security|JWT|permission/i.test(error.message)) {
-        await supabase.auth.refreshSession();
-        const retry = await insertEvent(ownerId, v);
-        data = retry.data;
-        error = retry.error;
-      }
-
-      // Dernier recours : déconnexion pour forcer une nouvelle authentification
-      if (error && /row-level security|row level security|JWT/i.test(error.message)) {
-        toast.error("Session expirée, merci de vous reconnecter");
-        await supabase.auth.signOut();
-        navigate({ to: "/auth" });
-        return;
-      }
-
-      if (error) throw error;
       toast.success("Événement créé");
-      navigate({ to: "/events/$id", params: { id: data!.id } });
+      navigate({ to: "/events/$id", params: { id: data.id } });
     } catch (err: any) {
-      toast.error(err?.message || "Impossible de créer l'événement");
+      if (/unauthorized|authorization|token/i.test(err?.message ?? "")) {
+        toast.error("Reconnectez-vous pour continuer");
+        navigate({ to: "/auth", search: { mode: "signin", redirect: "/events/new" } });
+      } else {
+        toast.error(err?.message || "Impossible de créer l'événement");
+      }
     } finally {
       setBusy(false);
     }

@@ -16,7 +16,8 @@ function AuthGate() {
     );
   }
   if (!user) {
-    return <Navigate to="/auth" search={{ mode: "signin", redirect: location.href }} />;
+    const redirect = location.pathname.startsWith("/auth") ? "/events" : location.href;
+    return <Navigate to="/auth" search={{ mode: "signin", redirect }} replace />;
   }
   return <Outlet />;
 }
