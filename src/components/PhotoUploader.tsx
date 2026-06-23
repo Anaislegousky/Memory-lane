@@ -39,13 +39,13 @@ export function PhotoUploader({ eventId, onUploaded }: { eventId: string; onUplo
         ok++;
       } catch (err: any) {
         console.error(err);
-        toast.error(err?.message || "Upload failed");
+        toast.error(err?.message || "Échec de l'envoi");
       }
     }
     setBusy(false);
     if (ref.current) ref.current.value = "";
     if (ok > 0) {
-      toast.success(`${ok} photo${ok > 1 ? "s" : ""} added`);
+      toast.success(`${ok} photo${ok > 1 ? "s" : ""} ajoutée${ok > 1 ? "s" : ""}`);
       onUploaded();
     }
   }
@@ -58,7 +58,7 @@ export function PhotoUploader({ eventId, onUploaded }: { eventId: string; onUplo
         className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
       >
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-        {busy ? "Uploading…" : "Add photos"}
+        {busy ? "Envoi…" : "Ajouter des photos"}
       </button>
       <input
         ref={ref}

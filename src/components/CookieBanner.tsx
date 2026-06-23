@@ -20,13 +20,13 @@ export function CookieBanner() {
     <div className="fixed inset-x-2 bottom-2 z-50 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:max-w-sm">
       <div className="rounded-2xl border border-border bg-card p-4 shadow-lg">
         <p className="text-sm text-foreground">
-          Memories uses only essential cookies to keep you signed in. No tracking, no third-party
-          analytics.
+          Memories n'utilise que des cookies essentiels pour vous maintenir connecté. Pas de suivi,
+          pas d'analyses tierces.
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Read our{" "}
+          Lisez notre{" "}
           <Link to="/privacy" className="underline">
-            Privacy Policy
+            politique de confidentialité
           </Link>
           .
         </p>
@@ -35,13 +35,13 @@ export function CookieBanner() {
             onClick={() => decide("essential")}
             className="flex-1 rounded-full border border-border bg-background px-3 py-2 text-sm font-medium"
           >
-            Essential only
+            Essentiels uniquement
           </button>
           <button
             onClick={() => decide("accept")}
             className="flex-1 rounded-full bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
           >
-            Got it
+            J'ai compris
           </button>
         </div>
       </div>

@@ -8,11 +8,12 @@ import { InviteShareSheet } from "@/components/InviteShareSheet";
 import { BottomNav } from "@/components/BottomNav";
 import { Share2, MapPin, Calendar, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/events/$id")({
-  head: () => ({ meta: [{ title: "Event — Memories" }] }),
+  head: () => ({ meta: [{ title: "Événement — Memories" }] }),
   component: EventDetail,
 });
 
@@ -53,7 +54,7 @@ function EventDetail() {
       return (rows ?? []).map((r) => ({
         user_id: r.user_id,
         role: r.role,
-        display_name: byId.get(r.user_id) ?? "Someone",
+        display_name: byId.get(r.user_id) ?? "Quelqu'un",
       }));
     },
   });
@@ -91,19 +92,19 @@ function EventDetail() {
 
   async function deleteEvent() {
     if (!ev) return;
-    if (!confirm(`Delete "${ev.name}" and all its photos?`)) return;
+    if (!confirm(`Supprimer « ${ev.name} » et toutes ses photos ?`)) return;
     const paths = (photosQ.data ?? []).map((p) => p.storage_path);
     if (paths.length) await supabase.storage.from("event-photos").remove(paths);
     const { error } = await supabase.from("events").delete().eq("id", ev.id);
     if (error) return toast.error(error.message);
-    toast.success("Event deleted");
+    toast.success("Événement supprimé");
     navigate({ to: "/events" });
   }
 
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="mx-auto max-w-md px-4 py-4">
-        <Link to="/events" className="text-sm text-muted-foreground">← Events</Link>
+        <Link to="/events" className="text-sm text-muted-foreground">← Événements</Link>
 
         {ev && (
           <>
@@ -112,7 +113,7 @@ function EventDetail() {
               {ev.event_date && (
                 <span className="inline-flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5" />
-                  {format(new Date(ev.event_date), "MMM d, yyyy")}
+                  {format(new Date(ev.event_date), "d MMM yyyy", { locale: fr })}
                 </span>
               )}
               {ev.location_label && (
@@ -129,7 +130,7 @@ function EventDetail() {
                 onClick={() => setShareOpen(true)}
                 className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-2 text-sm"
               >
-                <Share2 className="h-4 w-4" /> Invite
+                <Share2 className="h-4 w-4" /> Inviter
               </button>
               {isOwner && (
                 <button
@@ -146,7 +147,7 @@ function EventDetail() {
                 {membersQ.data.map((m) => (
                   <span key={m.user_id} className="rounded-full bg-accent px-2.5 py-0.5 text-xs">
                     {m.display_name}
-                    {m.role === "owner" ? " · host" : ""}
+                    {m.role === "owner" ? " · organisateur" : ""}
                   </span>
                 ))}
               </div>
@@ -162,7 +163,7 @@ function EventDetail() {
               />
             </div>
             <p className="mt-6 text-center text-xs text-muted-foreground">
-              Photos are private to event members and auto-delete after 90 days.
+              Les photos sont privées aux membres de l'événement et sont automatiquement supprimées au bout de 90 jours.
             </p>
           </>
         )}

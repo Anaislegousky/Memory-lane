@@ -5,10 +5,10 @@ import { useAuth } from "@/components/AuthProvider";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Memories — Share moments with your people" },
+      { title: "Memories — Partagez vos souvenirs entre proches" },
       {
         name: "description",
-        content: "A private, invite-only space to gather photos from your events with the people who were there.",
+        content: "Un espace privé et sur invitation pour rassembler les photos de vos événements avec ceux qui y étaient.",
       },
     ],
   }),
@@ -25,18 +25,18 @@ function Landing() {
         <div className="flex-1">
           <p className="text-xs uppercase tracking-[0.18em] text-primary">Memories</p>
           <h1 className="mt-3 font-display text-5xl leading-[1.05] tracking-tight">
-            Keep the moments that matter,{" "}
-            <span className="text-primary">together</span>.
+            Gardez les moments qui comptent,{" "}
+            <span className="text-primary">ensemble</span>.
           </h1>
           <p className="mt-5 text-base text-muted-foreground">
-            A small, private space to gather photos from your events with the friends who were
-            actually there. No feed, no ads, no strangers.
+            Un petit espace privé pour rassembler les photos de vos événements avec les amis qui
+            étaient vraiment là. Pas de fil d'actualité, pas de pub, pas d'inconnus.
           </p>
 
           <div className="mt-10 space-y-4">
-            <Feature icon={<Camera className="h-5 w-5" />} title="Photos in one place" desc="Drop pictures into the event they belong to." />
-            <Feature icon={<MapPin className="h-5 w-5" />} title="See where you've been" desc="Every event pinned on your shared map." />
-            <Feature icon={<Users className="h-5 w-5" />} title="Invite-only" desc="Only people you invite can join or see anything." />
+            <Feature icon={<Camera className="h-5 w-5" />} title="Toutes vos photos au même endroit" desc="Déposez vos photos dans l'événement auquel elles appartiennent." />
+            <Feature icon={<MapPin className="h-5 w-5" />} title="Revoyez où vous êtes allés" desc="Chaque événement épinglé sur votre carte partagée." />
+            <Feature icon={<Users className="h-5 w-5" />} title="Sur invitation uniquement" desc="Seules les personnes que vous invitez peuvent rejoindre ou voir quoi que ce soit." />
           </div>
         </div>
 
@@ -46,18 +46,18 @@ function Landing() {
             search={{ mode: "signup" }}
             className="block w-full rounded-full bg-primary px-5 py-3.5 text-center text-base font-medium text-primary-foreground"
           >
-            Create your account
+            Créer un compte
           </Link>
           <Link
             to="/auth"
             search={{ mode: "signin" }}
             className="block w-full rounded-full border border-border bg-card px-5 py-3.5 text-center text-base font-medium"
           >
-            I already have an account
+            J'ai déjà un compte
           </Link>
           <p className="pt-2 text-center text-xs text-muted-foreground">
-            By continuing you agree to our{" "}
-            <Link to="/privacy" className="underline">Privacy Policy</Link>.
+            En continuant, vous acceptez notre{" "}
+            <Link to="/privacy" className="underline">politique de confidentialité</Link>.
           </p>
         </div>
       </div>

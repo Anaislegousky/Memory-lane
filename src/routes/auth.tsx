@@ -12,17 +12,17 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Sign in — Memories" }] }),
+  head: () => ({ meta: [{ title: "Connexion — Memories" }] }),
   component: AuthPage,
 });
 
 const signupSchema = z.object({
-  display_name: z.string().trim().min(2, "At least 2 characters").max(60),
-  email: z.string().trim().email().max(255),
-  password: z.string().min(8, "Use at least 8 characters").max(72),
+  display_name: z.string().trim().min(2, "Au moins 2 caractères").max(60),
+  email: z.string().trim().email("E-mail invalide").max(255),
+  password: z.string().min(8, "Utilisez au moins 8 caractères").max(72),
 });
 const signinSchema = z.object({
-  email: z.string().trim().email(),
+  email: z.string().trim().email("E-mail invalide"),
   password: z.string().min(1),
 });
 
@@ -62,9 +62,9 @@ function AuthPage() {
           await supabase.from("profiles").upsert({ id: data.user.id, display_name: v.display_name });
         }
         if (!data.session) {
-          toast.success("Account created. Check your email to confirm.");
+          toast.success("Compte créé. Vérifiez votre e-mail pour confirmer.");
         } else {
-          toast.success("Welcome!");
+          toast.success("Bienvenue !");
           navigate({ to: redirectTo });
         }
       } else {
@@ -74,7 +74,7 @@ function AuthPage() {
         navigate({ to: redirectTo });
       }
     } catch (err: any) {
-      toast.error(err?.message || "Something went wrong");
+      toast.error(err?.message || "Une erreur est survenue");
     } finally {
       setBusy(false);
     }
@@ -83,33 +83,33 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-md px-6 py-10">
-        <Link to="/" className="text-sm text-muted-foreground">← Back</Link>
+        <Link to="/" className="text-sm text-muted-foreground">← Retour</Link>
         <h1 className="mt-4 font-display text-4xl">
-          {mode === "signup" ? "Create your account" : "Welcome back"}
+          {mode === "signup" ? "Créer votre compte" : "Bon retour"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {mode === "signup"
-            ? "We only need an email and a name your friends will recognise."
-            : "Sign in to see your events and photos."}
+            ? "Nous avons juste besoin d'un e-mail et d'un nom que vos amis reconnaîtront."
+            : "Connectez-vous pour retrouver vos événements et vos photos."}
         </p>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
           {mode === "signup" && (
-            <Field name="display_name" label="Display name" placeholder="Alex" autoComplete="nickname" />
+            <Field name="display_name" label="Nom d'affichage" placeholder="Alex" autoComplete="nickname" />
           )}
-          <Field name="email" type="email" label="Email" placeholder="you@example.com" autoComplete="email" />
+          <Field name="email" type="email" label="E-mail" placeholder="vous@exemple.com" autoComplete="email" />
           <Field
             name="password"
             type="password"
-            label="Password"
-            placeholder={mode === "signup" ? "At least 8 characters" : "Your password"}
+            label="Mot de passe"
+            placeholder={mode === "signup" ? "Au moins 8 caractères" : "Votre mot de passe"}
             autoComplete={mode === "signup" ? "new-password" : "current-password"}
           />
           <button
             disabled={busy}
             className="w-full rounded-full bg-primary px-5 py-3.5 text-base font-medium text-primary-foreground disabled:opacity-60"
           >
-            {busy ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
+            {busy ? "Veuillez patienter…" : mode === "signup" ? "Créer le compte" : "Se connecter"}
           </button>
         </form>
 
@@ -117,7 +117,7 @@ function AuthPage() {
           onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
           className="mt-6 w-full text-center text-sm text-muted-foreground underline"
         >
-          {mode === "signup" ? "I already have an account" : "Create a new account"}
+          {mode === "signup" ? "J'ai déjà un compte" : "Créer un nouveau compte"}
         </button>
       </div>
     </div>

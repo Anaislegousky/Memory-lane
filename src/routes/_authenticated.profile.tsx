@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { LogOut, Share2, Download, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  head: () => ({ meta: [{ title: "Profile — Memories" }] }),
+  head: () => ({ meta: [{ title: "Profil — Memories" }] }),
   component: ProfilePage,
 });
 
@@ -37,7 +37,7 @@ function ProfilePage() {
   async function saveName(name: string) {
     const { error } = await supabase.from("profiles").update({ display_name: name }).eq("id", user!.id);
     if (error) return toast.error(error.message);
-    toast.success("Updated");
+    toast.success("Mis à jour");
     setEditing(false);
     profileQ.refetch();
   }
@@ -80,31 +80,31 @@ function ProfilePage() {
   }
 
   async function deleteAccount() {
-    const confirmed = confirm("Delete your account and ALL your data? This cannot be undone.");
+    const confirmed = confirm("Supprimer votre compte et TOUTES vos données ? Cette action est irréversible.");
     if (!confirmed) return;
     try {
       const { deleteMyAccount } = await import("@/lib/account.functions");
       await deleteMyAccount();
       await supabase.auth.signOut();
-      toast.success("Account deleted");
+      toast.success("Compte supprimé");
       navigate({ to: "/", replace: true });
     } catch (err: any) {
-      toast.error(err?.message || "Could not delete account");
+      toast.error(err?.message || "Impossible de supprimer le compte");
     }
   }
 
   return (
-    <AppShell title="Profile">
+    <AppShell title="Profil">
       <div className="space-y-6">
         <section className="rounded-2xl border border-border bg-card p-4">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Signed in as</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Connecté en tant que</p>
           <p className="mt-1 text-sm">{user?.email}</p>
           <div className="mt-3">
             {!editing ? (
               <div className="flex items-center justify-between">
                 <p className="font-display text-2xl">{profileQ.data?.display_name ?? "…"}</p>
                 <button onClick={() => setEditing(true)} className="text-sm text-primary underline">
-                  Edit
+                  Modifier
                 </button>
               </div>
             ) : (
@@ -121,7 +121,7 @@ function ProfilePage() {
                   defaultValue={profileQ.data?.display_name ?? ""}
                   className="flex-1 rounded-xl border border-input bg-background px-3 py-2 text-sm"
                 />
-                <button className="rounded-full bg-primary px-3 py-2 text-sm text-primary-foreground">Save</button>
+                <button className="rounded-full bg-primary px-3 py-2 text-sm text-primary-foreground">Enregistrer</button>
               </form>
             )}
           </div>
@@ -133,7 +133,7 @@ function ProfilePage() {
             className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left"
           >
             <span className="flex items-center gap-3">
-              <Share2 className="h-5 w-5" /> Invite a friend
+              <Share2 className="h-5 w-5" /> Inviter un ami
             </span>
             <span className="text-xs text-muted-foreground">›</span>
           </button>
@@ -143,7 +143,7 @@ function ProfilePage() {
             className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left"
           >
             <span className="flex items-center gap-3">
-              <Download className="h-5 w-5" /> Export my data (JSON)
+              <Download className="h-5 w-5" /> Exporter mes données (JSON)
             </span>
             <span className="text-xs text-muted-foreground">›</span>
           </button>
@@ -153,7 +153,7 @@ function ProfilePage() {
             className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left"
           >
             <span className="flex items-center gap-3">
-              <LogOut className="h-5 w-5" /> Sign out
+              <LogOut className="h-5 w-5" /> Se déconnecter
             </span>
           </button>
 
@@ -162,14 +162,14 @@ function ProfilePage() {
             className="flex w-full items-center justify-between rounded-2xl border border-destructive/30 bg-card p-4 text-left text-destructive"
           >
             <span className="flex items-center gap-3">
-              <Trash2 className="h-5 w-5" /> Delete my account
+              <Trash2 className="h-5 w-5" /> Supprimer mon compte
             </span>
           </button>
         </section>
 
         <p className="px-2 text-center text-xs text-muted-foreground">
-          We only collect what's needed to run Memories. See our{" "}
-          <a href="/privacy" className="underline">Privacy Policy</a>.
+          Nous ne collectons que ce qui est nécessaire au fonctionnement de Memories. Consultez notre{" "}
+          <a href="/privacy" className="underline">politique de confidentialité</a>.
         </p>
       </div>
       {share && <InviteShareSheet scope="network" onClose={() => setShare(false)} />}

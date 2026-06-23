@@ -6,7 +6,7 @@ import { redeemInvite } from "@/lib/invites.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/join/$token")({
-  head: () => ({ meta: [{ title: "Join — Memories" }] }),
+  head: () => ({ meta: [{ title: "Rejoindre — Memories" }] }),
   component: JoinPage,
 });
 
@@ -25,11 +25,11 @@ function JoinPage() {
     redeem({ data: { token } })
       .then((res: any) => {
         setDone(true);
-        toast.success("You're in!");
+        toast.success("C'est bon, vous êtes inscrit !");
         if (res?.event_id) navigate({ to: "/events/$id", params: { id: res.event_id } });
         else navigate({ to: "/events" });
       })
-      .catch((err) => toast.error(err?.message || "Could not accept invite"))
+      .catch((err) => toast.error(err?.message || "Impossible d'accepter l'invitation"))
       .finally(() => setBusy(false));
   }, [user, loading, token, redeem, navigate, done]);
 
@@ -37,9 +37,9 @@ function JoinPage() {
     const redirect = `/join/${token}`;
     return (
       <div className="mx-auto max-w-md px-6 py-16 text-center">
-        <h1 className="font-display text-3xl">You've been invited</h1>
+        <h1 className="font-display text-3xl">Vous avez été invité</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Create an account or sign in to accept this invite.
+          Créez un compte ou connectez-vous pour accepter cette invitation.
         </p>
         <div className="mt-6 space-y-2">
           <Link
@@ -47,14 +47,14 @@ function JoinPage() {
             search={{ mode: "signup", redirect }}
             className="block w-full rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
           >
-            Create account
+            Créer un compte
           </Link>
           <Link
             to="/auth"
             search={{ mode: "signin", redirect }}
             className="block w-full rounded-full border border-border bg-card px-5 py-3 text-sm font-medium"
           >
-            I already have an account
+            J'ai déjà un compte
           </Link>
         </div>
       </div>
@@ -64,8 +64,8 @@ function JoinPage() {
   return (
     <div className="grid min-h-screen place-items-center px-6 text-center">
       <div>
-        <h1 className="font-display text-2xl">{busy ? "Accepting invite…" : "Just a moment"}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Hold tight while we add you in.</p>
+        <h1 className="font-display text-2xl">{busy ? "Acceptation en cours…" : "Un instant"}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">On vous ajoute, ça arrive.</p>
       </div>
     </div>
   );
