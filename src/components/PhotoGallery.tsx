@@ -435,6 +435,14 @@ function Lightbox({
         <button onClick={onClose} aria-label="Fermer" className="rounded-full p-2"><X className="h-5 w-5" /></button>
         <span className="text-xs text-white/70">{index + 1} / {photos.length}</span>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => onSelect(photo.id)}
+            aria-label="Sélectionner"
+            title="Sélectionner"
+            className="rounded-full bg-white/10 p-2"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+          </button>
           <button onClick={download} aria-label="Télécharger" className="rounded-full bg-white/10 p-2">
             <Download className="h-4 w-4" />
           </button>
