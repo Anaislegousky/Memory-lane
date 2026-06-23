@@ -17,7 +17,7 @@ function EventsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("id, name, event_date, location_label, lat, lng, created_at")
+        .select("id, name, event_date, end_date, location_label, lat, lng, created_at")
         .order("event_date", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -45,7 +45,15 @@ function EventsPage() {
                   {e.event_date && (
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />
-                      {format(new Date(e.event_date), "d MMM yyyy", { locale: fr })}
+                      {e.end_date && e.end_date !== e.event_date
+                        ? `${format(new Date(e.event_date), "d MMM", { locale: fr })} – ${format(new Date(e.end_date), "d MMM yyyy", { locale: fr })}`
+                        : format(new Date(e.event_date), "d MMM yyyy", { locale: fr })}
+                    </span>
+                  )}
+                  {e.location_label && (
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5" />
+                      {e.location_label.split(",")[0].trim()}
                     </span>
                   )}
                   {e.location_label && (
