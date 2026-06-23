@@ -157,65 +157,83 @@ export function PhotoGallery({
 
   if (!photos.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-card/50 py-10 text-center text-sm text-muted-foreground">
-        Aucune photo pour le moment. Soyez le premier à en ajouter.
+      <div className="mx-5 rounded-2xl border border-dashed border-border bg-card/60 py-10 text-center text-sm text-muted-foreground">
+        Aucune photo pour le moment.<br />Soyez le premier à en ajouter.
       </div>
     );
   }
 
   return (
     <>
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-3 flex items-center justify-between px-5">
         {!selectMode ? (
           <>
-            <button
-              onClick={() => setSelectMode(true)}
-              className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-xs"
-            >
-              <CheckSquare className="h-3.5 w-3.5" /> Sélectionner
-            </button>
-            <button
-              onClick={downloadAll}
-              disabled={busy}
-              className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-xs disabled:opacity-50"
-            >
-              <Download className="h-3.5 w-3.5" /> Tout télécharger
-            </button>
-            <span className="ml-auto text-xs text-muted-foreground">{photos.length} photo{photos.length > 1 ? "s" : ""}</span>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+              {count ?? photos.length} photo{(count ?? photos.length) > 1 ? "s" : ""}
+            </h2>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setSelectMode(true)}
+                className="rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-background/70"
+              >
+                Sélectionner
+              </button>
+              <button
+                onClick={downloadAll}
+                disabled={busy}
+                aria-label="Tout télécharger"
+                title="Tout télécharger"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-foreground hover:bg-background/70 disabled:opacity-50"
+              >
+                <Download className="h-4 w-4" />
+              </button>
+            </div>
           </>
         ) : (
           <>
-            <button onClick={exitSelect} className="rounded-full border border-border bg-card px-3 py-1.5 text-xs">
-              Annuler
-            </button>
-            <button
-              onClick={() => setSelected(new Set(photos.map((p) => p.id)))}
-              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs"
-            >
-              Tout
-            </button>
-            <span className="text-xs text-muted-foreground">{selected.size} sélectionnée{selected.size > 1 ? "s" : ""}</span>
-            <div className="ml-auto flex gap-1.5">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={exitSelect}
+                className="rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-background/70"
+              >
+                Annuler
+              </button>
+              <span className="text-sm text-muted-foreground">
+                {selected.size} sélectionnée{selected.size > 1 ? "s" : ""}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setSelected(new Set(photos.map((p) => p.id)))}
+                className="rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-background/70"
+              >
+                Tout
+              </button>
               <button
                 onClick={downloadSelected}
                 disabled={busy || !selected.size}
-                className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground disabled:opacity-50"
+                aria-label="Télécharger la sélection"
+                title="Télécharger"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-50"
               >
-                <Download className="h-3.5 w-3.5" /> Télécharger
+                <Download className="h-4 w-4" />
               </button>
               <button
                 onClick={deleteSelected}
                 disabled={!selected.size}
-                className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-1.5 text-xs text-destructive disabled:opacity-50"
+                aria-label="Supprimer la sélection"
+                title="Supprimer"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-destructive hover:bg-destructive/10 disabled:opacity-40"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
           </>
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-0.5 px-0.5 sm:grid-cols-3">
+
         {photos.map((p, i) => {
           const u = urls.get(p.storage_path);
           const isSel = selected.has(p.id);
