@@ -26,17 +26,7 @@ function EventsPage() {
   });
 
   return (
-    <AppShell
-      title="Événements"
-      action={
-        <Link
-          to="/events/new"
-          className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
-        >
-          <Plus className="h-4 w-4" /> Nouveau
-        </Link>
-      }
-    >
+    <AppShell title="Événements">
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Chargement…</p>
       ) : !events?.length ? (
@@ -81,9 +71,9 @@ function EmptyState() {
       <p className="mt-2 text-sm text-muted-foreground">Créez votre premier événement pour commencer à rassembler des photos avec vos amis.</p>
       <Link
         to="/events/new"
-        className="mt-6 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
+        className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-muted text-sm font-medium text-primary-foreground"
       >
-        Créer un événement
+        <Plus className="h-4 w-4" /> Créer un événement
       </Link>
     </div>
   );
