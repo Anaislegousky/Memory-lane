@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { MapPin, Locate, Search } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/events/new")({
-  head: () => ({ meta: [{ title: "New event — Memories" }] }),
+  head: () => ({ meta: [{ title: "Nouvel événement — Memories" }] }),
   component: NewEventPage,
 });
 
@@ -30,7 +30,7 @@ function NewEventPage() {
 
   async function useMyLocation() {
     if (!("geolocation" in navigator)) {
-      toast.error("Geolocation not supported");
+      toast.error("Géolocalisation non disponible");
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -38,7 +38,7 @@ function NewEventPage() {
         const { latitude, longitude } = pos.coords;
         try {
           const r = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14`,
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14&accept-language=fr`,
             { headers: { Accept: "application/json" } },
           );
           const j = await r.json();
@@ -48,7 +48,7 @@ function NewEventPage() {
           setLoc({ label: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, lat: latitude, lng: longitude });
         }
       },
-      () => toast.error("Couldn't get your location"),
+      () => toast.error("Impossible d'obtenir votre position"),
       { enableHighAccuracy: false, timeout: 8000 },
     );
   }
@@ -58,7 +58,7 @@ function NewEventPage() {
     setSearching(true);
     try {
       const r = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(search)}`,
+        `https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=fr&q=${encodeURIComponent(search)}`,
       );
       setResults(await r.json());
     } finally {
@@ -90,10 +90,10 @@ function NewEventPage() {
         .select("id")
         .single();
       if (error) throw error;
-      toast.success("Event created");
+      toast.success("Événement créé");
       navigate({ to: "/events/$id", params: { id: data.id } });
     } catch (err: any) {
-      toast.error(err?.message || "Could not create event");
+      toast.error(err?.message || "Impossible de créer l'événement");
     } finally {
       setBusy(false);
     }
@@ -102,16 +102,16 @@ function NewEventPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-md px-4 py-6 pb-20">
-        <Link to="/events" className="text-sm text-muted-foreground">← Back</Link>
-        <h1 className="mt-3 font-display text-3xl">New event</h1>
+        <Link to="/events" className="text-sm text-muted-foreground">← Retour</Link>
+        <h1 className="mt-3 font-display text-3xl">Nouvel événement</h1>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium">Name</span>
+            <span className="mb-1.5 block text-sm font-medium">Nom</span>
             <input
               name="name"
               required
-              placeholder="Summer in Lisbon"
+              placeholder="Été à Lisbonne"
               className="w-full rounded-xl border border-input bg-card px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </label>
@@ -125,22 +125,22 @@ function NewEventPage() {
           </label>
 
           <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-sm font-medium">Location</p>
-            <p className="mt-1 text-xs text-muted-foreground">Optional. Use your current spot, or search a place.</p>
+            <p className="text-sm font-medium">Lieu</p>
+            <p className="mt-1 text-xs text-muted-foreground">Optionnel. Utilisez votre position actuelle ou recherchez un lieu.</p>
 
             <button
               type="button"
               onClick={useMyLocation}
               className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-sm"
             >
-              <Locate className="h-4 w-4" /> Use my location
+              <Locate className="h-4 w-4" /> Utiliser ma position
             </button>
 
             <div className="mt-3 flex gap-2">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="City or address"
+                placeholder="Ville ou adresse"
                 className="flex-1 rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -194,7 +194,7 @@ function NewEventPage() {
             {!loc.label && (
               <input
                 name="location_label"
-                placeholder="Or type a label (e.g. Anna's place)"
+                placeholder="Ou saisissez un libellé (ex. chez Anna)"
                 className="mt-3 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
               />
             )}
@@ -204,7 +204,7 @@ function NewEventPage() {
             disabled={busy}
             className="w-full rounded-full bg-primary px-5 py-3.5 font-medium text-primary-foreground disabled:opacity-60"
           >
-            {busy ? "Creating…" : "Create event"}
+            {busy ? "Création…" : "Créer l'événement"}
           </button>
         </form>
       </div>

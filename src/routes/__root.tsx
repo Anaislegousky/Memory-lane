@@ -28,12 +28,12 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="font-display text-7xl text-foreground">404</h1>
-        <p className="mt-3 text-muted-foreground">This page doesn't exist.</p>
+        <p className="mt-3 text-muted-foreground">Cette page n'existe pas.</p>
         <Link
           to="/"
           className="mt-6 inline-flex rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground"
         >
-          Back home
+          Retour à l'accueil
         </Link>
       </div>
     </div>
@@ -50,7 +50,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="font-display text-2xl">Something went wrong</h1>
+        <h1 className="font-display text-2xl">Une erreur est survenue</h1>
         <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
         <button
           onClick={() => {
@@ -59,7 +59,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           }}
           className="mt-6 rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground"
         >
-          Try again
+          Réessayer
         </button>
       </div>
     </div>
@@ -72,15 +72,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#f4ede0" },
-      { title: "Memories — Share moments with your people" },
+      { title: "Memories — Partagez vos souvenirs entre proches" },
       {
         name: "description",
         content:
-          "A private, invite-only space to gather photos from your events with the people who were there.",
+          "Un espace privé et sur invitation pour rassembler les photos de vos événements avec ceux qui y étaient.",
       },
       { property: "og:title", content: "Memories" },
-      { property: "og:description", content: "Private photo memories, shared with the people who were there." },
+      { property: "og:description", content: "Vos souvenirs photo en privé, partagés avec ceux qui y étaient." },
       { property: "og:type", content: "website" },
+      { property: "og:locale", content: "fr_FR" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),
@@ -92,7 +93,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <head>
         <HeadContent />
       </head>

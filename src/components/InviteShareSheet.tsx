@@ -39,7 +39,7 @@ export function InviteShareSheet({
       const url = `${window.location.origin}/join/${token}`;
       setLink(url);
     } catch (err: any) {
-      toast.error(err?.message || "Could not create invite");
+      toast.error(err?.message || "Impossible de créer l'invitation");
     } finally {
       setBusy(false);
     }
@@ -48,13 +48,13 @@ export function InviteShareSheet({
   async function copy() {
     if (!link) return;
     await navigator.clipboard.writeText(link);
-    toast.success("Link copied");
+    toast.success("Lien copié");
   }
 
   async function share() {
     if (!link) return;
     if (navigator.share) {
-      try { await navigator.share({ url: link, title: "Join me on Memories" }); } catch {}
+      try { await navigator.share({ url: link, title: "Rejoignez-moi sur Memories" }); } catch {}
     } else {
       copy();
     }
@@ -65,14 +65,14 @@ export function InviteShareSheet({
       <div className="w-full max-w-md rounded-t-3xl bg-card p-5 sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-display text-xl">
-            {scope === "event" ? "Invite to this event" : "Invite a friend"}
+            {scope === "event" ? "Inviter à cet événement" : "Inviter un ami"}
           </h3>
           <button onClick={onClose}><X className="h-5 w-5" /></button>
         </div>
         <p className="text-sm text-muted-foreground">
           {scope === "event"
-            ? "Anyone with this link can join this event and see the photos."
-            : "Send this link to add someone to your circle. They'll be able to see events you invite them to."}
+            ? "Toute personne avec ce lien pourra rejoindre l'événement et voir les photos."
+            : "Envoyez ce lien pour ajouter quelqu'un à votre cercle. Cette personne verra les événements auxquels vous l'invitez."}
         </p>
         {!link ? (
           <button
@@ -80,7 +80,7 @@ export function InviteShareSheet({
             disabled={busy}
             className="mt-5 w-full rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground disabled:opacity-60"
           >
-            {busy ? "Creating link…" : "Create invite link"}
+            {busy ? "Création du lien…" : "Créer le lien d'invitation"}
           </button>
         ) : (
           <>
@@ -89,13 +89,13 @@ export function InviteShareSheet({
             </div>
             <div className="mt-3 flex gap-2">
               <button onClick={copy} className="flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm">
-                <Copy className="h-4 w-4" /> Copy
+                <Copy className="h-4 w-4" /> Copier
               </button>
               <button onClick={share} className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm text-primary-foreground">
-                <Share2 className="h-4 w-4" /> Share
+                <Share2 className="h-4 w-4" /> Partager
               </button>
             </div>
-            <p className="mt-3 text-center text-xs text-muted-foreground">Link expires in 30 days.</p>
+            <p className="mt-3 text-center text-xs text-muted-foreground">Le lien expire dans 30 jours.</p>
           </>
         )}
       </div>

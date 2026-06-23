@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Plus, MapPin, Calendar } from "lucide-react";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export const Route = createFileRoute("/_authenticated/events/")({
-  head: () => ({ meta: [{ title: "Your events — Memories" }] }),
+  head: () => ({ meta: [{ title: "Vos événements — Memories" }] }),
   component: EventsPage,
 });
 
@@ -26,18 +27,18 @@ function EventsPage() {
 
   return (
     <AppShell
-      title="Events"
+      title="Événements"
       action={
         <Link
           to="/events/new"
           className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
         >
-          <Plus className="h-4 w-4" /> New
+          <Plus className="h-4 w-4" /> Nouveau
         </Link>
       }
     >
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <p className="text-sm text-muted-foreground">Chargement…</p>
       ) : !events?.length ? (
         <EmptyState />
       ) : (
@@ -54,7 +55,7 @@ function EventsPage() {
                   {e.event_date && (
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />
-                      {format(new Date(e.event_date), "MMM d, yyyy")}
+                      {format(new Date(e.event_date), "d MMM yyyy", { locale: fr })}
                     </span>
                   )}
                   {e.location_label && (
@@ -76,13 +77,13 @@ function EventsPage() {
 function EmptyState() {
   return (
     <div className="mt-16 text-center">
-      <p className="font-display text-2xl">No events yet</p>
-      <p className="mt-2 text-sm text-muted-foreground">Create your first event to start collecting photos with your friends.</p>
+      <p className="font-display text-2xl">Aucun événement pour l'instant</p>
+      <p className="mt-2 text-sm text-muted-foreground">Créez votre premier événement pour commencer à rassembler des photos avec vos amis.</p>
       <Link
         to="/events/new"
         className="mt-6 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
       >
-        Create an event
+        Créer un événement
       </Link>
     </div>
   );

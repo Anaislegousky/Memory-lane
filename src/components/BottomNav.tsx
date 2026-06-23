@@ -8,15 +8,15 @@ export function BottomNav() {
       <div className="mx-auto flex max-w-md">
         <Link to="/events" className={item} activeProps={{ "data-status": "active" } as any}>
           <Calendar className="h-5 w-5" />
-          Events
+          Événements
         </Link>
         <Link to="/map" className={item} activeProps={{ "data-status": "active" } as any}>
           <Map className="h-5 w-5" />
-          Map
+          Carte
         </Link>
         <Link to="/profile" className={item} activeProps={{ "data-status": "active" } as any}>
           <User className="h-5 w-5" />
-          Profile
+          Profil
         </Link>
       </div>
       <div className="h-[env(safe-area-inset-bottom)]" />

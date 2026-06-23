@@ -50,7 +50,7 @@ export function PhotoGallery({
   if (!photos.length) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card/50 py-10 text-center text-sm text-muted-foreground">
-        No photos yet. Be the first to add some.
+        Aucune photo pour le moment. Soyez le premier à en ajouter.
       </div>
     );
   }
@@ -133,12 +133,12 @@ function Lightbox({
   }
 
   async function deletePhoto() {
-    if (!confirm("Delete this photo?")) return;
+    if (!confirm("Supprimer cette photo ?")) return;
     const { error: sErr } = await supabase.storage.from("event-photos").remove([photo.storage_path]);
     if (sErr) console.warn(sErr);
     const { error } = await supabase.from("photos").delete().eq("id", photo.id);
     if (error) return toast.error(error.message);
-    toast.success("Deleted");
+    toast.success("Supprimée");
     onClose();
     onChange();
   }
@@ -154,7 +154,7 @@ function Lightbox({
             onClick={() => setShowTags((s) => !s)}
             className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1.5 text-sm"
           >
-            <TagIcon className="h-4 w-4" /> Tag people
+            <TagIcon className="h-4 w-4" /> Identifier
           </button>
           {canDelete && (
             <button onClick={deletePhoto} className="rounded-full bg-white/10 p-2">
@@ -168,12 +168,12 @@ function Lightbox({
       </div>
       {tags.length > 0 && !showTags && (
         <div className="bg-black/60 px-4 py-2 text-xs text-white/90">
-          Tagged: {tags.map((t) => namesById.get(t.tagged_user_id) ?? "?").join(", ")}
+          Identifié·es : {tags.map((t) => namesById.get(t.tagged_user_id) ?? "?").join(", ")}
         </div>
       )}
       {showTags && (
         <div className="max-h-72 overflow-auto border-t border-white/10 bg-card p-4">
-          <p className="mb-2 text-sm font-medium">Who's in this photo?</p>
+          <p className="mb-2 text-sm font-medium">Qui est sur cette photo ?</p>
           <div className="flex flex-wrap gap-2">
             {members.map((m) => {
               const on = tagged.has(m.user_id);
