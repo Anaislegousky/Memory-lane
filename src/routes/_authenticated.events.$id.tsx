@@ -116,21 +116,6 @@ function EventDetail() {
   const members = membersQ.data ?? [];
   const photoCount = photosQ.data?.length ?? 0;
 
-  // Shrink title if it wraps to more than 2 lines
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const [smallTitle, setSmallTitle] = useState(false);
-  useLayoutEffect(() => {
-    const el = titleRef.current;
-    if (!el || !ev?.name) return;
-    setSmallTitle(false);
-    requestAnimationFrame(() => {
-      if (!titleRef.current) return;
-      const lh = parseFloat(getComputedStyle(titleRef.current).lineHeight) || 28;
-      const lines = Math.round(titleRef.current.scrollHeight / lh);
-      if (lines > 2) setSmallTitle(true);
-    });
-  }, [ev?.name]);
-
   const dateLabel =
     ev?.event_date
       ? ev.end_date && ev.end_date !== ev.event_date
