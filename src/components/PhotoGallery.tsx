@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { signedUrlsFor } from "@/lib/photo-urls";
-import { Tag as TagIcon, X, Trash2, Download, Check, ChevronLeft, ChevronRight, CheckSquare } from "lucide-react";
+import { Tag as TagIcon, X, Trash2, Download, Check, ChevronLeft, ChevronRight, CheckSquare, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
@@ -317,6 +317,11 @@ export function PhotoGallery({
           onIndex={setOpenIdx}
           onClose={() => setOpenIdx(null)}
           onChange={onChange}
+          onSelect={(id) => {
+            setSelectMode(true);
+            setSelected(new Set([id]));
+            setOpenIdx(null);
+          }}
         />
       )}
     </>
@@ -334,6 +339,7 @@ function Lightbox({
   onIndex,
   onClose,
   onChange,
+  onSelect,
 }: {
   photos: Photo[];
   index: number;
@@ -345,6 +351,7 @@ function Lightbox({
   onIndex: (i: number) => void;
   onClose: () => void;
   onChange: () => void;
+  onSelect: (id: string) => void;
 }) {
   const photo = photos[index];
   const url = urls.get(photo.storage_path);
@@ -428,6 +435,14 @@ function Lightbox({
         <button onClick={onClose} aria-label="Fermer" className="rounded-full p-2"><X className="h-5 w-5" /></button>
         <span className="text-xs text-white/70">{index + 1} / {photos.length}</span>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => onSelect(photo.id)}
+            aria-label="Sélectionner"
+            title="Sélectionner"
+            className="rounded-full bg-white/10 p-2"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+          </button>
           <button onClick={download} aria-label="Télécharger" className="rounded-full bg-white/10 p-2">
             <Download className="h-4 w-4" />
           </button>

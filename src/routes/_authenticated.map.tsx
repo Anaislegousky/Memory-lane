@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { signedUrlsFor } from "@/lib/photo-urls";
 import { BottomNav } from "@/components/BottomNav";
 import { lazy, Suspense, useEffect, useState } from "react";
 
@@ -15,15 +16,37 @@ function MapPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["events-map"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: events, error } = await supabase
         .from("events")
         .select("id, name, lat, lng")
         .not("lat", "is", null)
         .not("lng", "is", null);
       if (error) throw error;
-      return (data ?? []).filter((e) => e.lat != null && e.lng != null) as {
+      const evs = (events ?? []).filter((e) => e.lat != null && e.lng != null) as {
         id: string; name: string; lat: number; lng: number;
       }[];
+      if (!evs.length) return [];
+
+      // Latest photo per event (best-effort: one fetch per event in parallel)
+      const photoRows = await Promise.all(
+        evs.map((e) =>
+          supabase
+            .from("photos")
+            .select("storage_path")
+            .eq("event_id", e.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+            .then((r) => ({ id: e.id, path: r.data?.storage_path ?? null })),
+        ),
+      );
+      const paths = photoRows.map((r) => r.path).filter((p): p is string => !!p);
+      const urls = await signedUrlsFor(paths).catch(() => new Map<string, string>());
+      const thumbByEvent = new Map(
+        photoRows.map((r) => [r.id, r.path ? urls.get(r.path) ?? null : null]),
+      );
+
+      return evs.map((e) => ({ ...e, thumb: thumbByEvent.get(e.id) ?? null }));
     },
   });
 

@@ -6,12 +6,13 @@ import { PhotoUploader } from "@/components/PhotoUploader";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { InviteShareSheet } from "@/components/InviteShareSheet";
 import { BottomNav } from "@/components/BottomNav";
-import { ChevronLeft, MapPin, Calendar, Trash2, UserPlus, X } from "lucide-react";
+import { ChevronLeft, MapPin, Calendar, Trash2, UserPlus, X, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useState } from "react";
 import { toast } from "sonner";
 import { shortAddress } from "@/lib/format-address";
+import { EventEditSheet } from "@/components/EventEditSheet";
 
 export const Route = createFileRoute("/_authenticated/events/$id")({
   head: () => ({ meta: [{ title: "Événement — Memories" }] }),
@@ -34,6 +35,7 @@ function EventDetail() {
   const navigate = useNavigate();
   const [shareOpen, setShareOpen] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const eventQ = useQuery({
     queryKey: ["event", id],
@@ -137,13 +139,22 @@ function EventDetail() {
             <span>Retour</span>
           </Link>
           {isOwner && (
-            <button
-              onClick={deleteEvent}
-              aria-label="Supprimer l'événement"
-              className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-            >
-              <Trash2 className="h-5 w-5" />
-            </button>
+            <div className="-mr-1 flex items-center gap-1">
+              <button
+                onClick={() => setEditOpen(true)}
+                aria-label="Modifier l'événement"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
+              >
+                <Pencil className="h-5 w-5" />
+              </button>
+              <button
+                onClick={deleteEvent}
+                aria-label="Supprimer l'événement"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </div>
           )}
         </div>
 
@@ -246,6 +257,14 @@ function EventDetail() {
 
       {shareOpen && ev && (
         <InviteShareSheet scope="event" eventId={ev.id} onClose={() => setShareOpen(false)} />
+      )}
+
+      {editOpen && ev && (
+        <EventEditSheet
+          ev={ev}
+          onClose={() => setEditOpen(false)}
+          onSaved={() => eventQ.refetch()}
+        />
       )}
       <BottomNav />
     </div>
