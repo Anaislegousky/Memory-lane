@@ -49,13 +49,8 @@ function NewEventPage() {
       async (pos) => {
         const { latitude, longitude } = pos.coords;
         try {
-          const r = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14&accept-language=fr`,
-            { headers: { Accept: "application/json" } },
-          );
-          const j = await r.json();
-          const label = j.display_name || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-          setLoc({ label, lat: latitude, lng: longitude });
+          const { display_name } = await reverseFn({ data: { lat: latitude, lng: longitude } });
+          setLoc({ label: display_name, lat: latitude, lng: longitude });
         } catch {
           setLoc({ label: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, lat: latitude, lng: longitude });
         }
@@ -69,10 +64,10 @@ function NewEventPage() {
     if (!search.trim()) return;
     setSearching(true);
     try {
-      const r = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=fr&q=${encodeURIComponent(search)}`,
-      );
-      setResults(await r.json());
+      const res = await searchFn({ data: { q: search.trim() } });
+      setResults(res);
+    } catch (e: any) {
+      toast.error(e?.message || "Recherche indisponible");
     } finally {
       setSearching(false);
     }
