@@ -129,14 +129,46 @@ function NewEventPage() {
               className="w-full rounded-xl border border-input bg-card px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </label>
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-medium">Date</span>
-            <input
-              type="date"
-              name="event_date"
-              className="w-full rounded-xl border border-input bg-card px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </label>
+          <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium">
+                {multiDay ? "Date de début" : "Date"}
+              </span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  if (!multiDay || endDate < e.target.value) setEndDate(e.target.value);
+                }}
+                className="w-full rounded-xl border border-input bg-background px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={multiDay}
+                onChange={(e) => {
+                  setMultiDay(e.target.checked);
+                  if (e.target.checked && endDate < startDate) setEndDate(startDate);
+                }}
+                className="h-4 w-4 rounded border-input"
+              />
+              Plusieurs jours
+            </label>
+            {multiDay && (
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium">Date de fin</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  min={startDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full rounded-xl border border-input bg-background px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+            )}
+          </div>
 
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-sm font-medium">Lieu</p>
