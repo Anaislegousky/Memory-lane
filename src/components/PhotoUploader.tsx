@@ -66,9 +66,9 @@ export function PhotoUploader({
         onClick={() => galleryRef.current?.click()}
         disabled={busy}
         aria-label="Ajouter des photos"
-        className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-base font-semibold text-primary-foreground shadow-sm transition active:scale-[0.98] disabled:opacity-60"
+        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition active:scale-[0.98] disabled:opacity-60"
       >
-        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
         {busy ? "Envoi…" : "Ajouter"}
       </button>
       <button
@@ -76,7 +76,7 @@ export function PhotoUploader({
         disabled={busy}
         aria-label="Prendre une photo"
         title="Prendre une photo"
-        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-accent-foreground transition active:scale-[0.98] disabled:opacity-60"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-accent-foreground transition active:scale-[0.98] disabled:opacity-60"
       >
         <Camera className="h-5 w-5" />
       </button>

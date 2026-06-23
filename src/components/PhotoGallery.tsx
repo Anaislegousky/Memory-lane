@@ -165,16 +165,16 @@ export function PhotoGallery({
 
   return (
     <>
-      <div className="mb-3 flex items-center justify-between px-5">
+      <div className="mb-1 flex items-center justify-between px-5">
         {!selectMode ? (
           <>
-            <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
               {count ?? photos.length} photo{(count ?? photos.length) > 1 ? "s" : ""}
             </h2>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               <button
                 onClick={() => setSelectMode(true)}
-                className="rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-background/70"
+                className="rounded-full px-2 py-0.5 text-xs font-medium text-foreground hover:bg-background/70"
               >
                 Sélectionner
               </button>
@@ -183,29 +183,29 @@ export function PhotoGallery({
                 disabled={busy}
                 aria-label="Tout télécharger"
                 title="Tout télécharger"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-foreground hover:bg-background/70 disabled:opacity-50"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full text-foreground hover:bg-background/70 disabled:opacity-50"
               >
-                <Download className="h-4 w-4" />
+                <Download className="h-3.5 w-3.5" />
               </button>
             </div>
           </>
         ) : (
           <>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={exitSelect}
-                className="rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-background/70"
+                className="rounded-full px-2 py-0.5 text-xs font-medium text-foreground hover:bg-background/70"
               >
                 Désélectionner
               </button>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {selected.size} sélectionnée{selected.size > 1 ? "s" : ""}
               </span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               <button
                 onClick={() => setSelected(new Set(photos.map((p) => p.id)))}
-                className="rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-background/70"
+                className="rounded-full px-2 py-0.5 text-xs font-medium text-foreground hover:bg-background/70"
               >
                 Tout
               </button>
@@ -214,18 +214,18 @@ export function PhotoGallery({
                 disabled={busy || !selected.size}
                 aria-label="Télécharger la sélection"
                 title="Télécharger"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-50"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-50"
               >
-                <Download className="h-4 w-4" />
+                <Download className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={deleteSelected}
                 disabled={!selected.size}
                 aria-label="Supprimer la sélection"
                 title="Supprimer"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full text-destructive hover:bg-destructive/10 disabled:opacity-40"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
           </>

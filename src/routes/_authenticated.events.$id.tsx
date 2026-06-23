@@ -9,7 +9,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { ChevronLeft, MapPin, Calendar, Trash2, UserPlus, X } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { shortAddress } from "@/lib/format-address";
 
@@ -116,21 +116,6 @@ function EventDetail() {
   const members = membersQ.data ?? [];
   const photoCount = photosQ.data?.length ?? 0;
 
-  // Shrink title if it wraps to more than 2 lines
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const [smallTitle, setSmallTitle] = useState(false);
-  useLayoutEffect(() => {
-    const el = titleRef.current;
-    if (!el || !ev?.name) return;
-    setSmallTitle(false);
-    requestAnimationFrame(() => {
-      if (!titleRef.current) return;
-      const lh = parseFloat(getComputedStyle(titleRef.current).lineHeight) || 28;
-      const lines = Math.round(titleRef.current.scrollHeight / lh);
-      if (lines > 2) setSmallTitle(true);
-    });
-  }, [ev?.name]);
-
   const dateLabel =
     ev?.event_date
       ? ev.end_date && ev.end_date !== ev.event_date
@@ -166,13 +151,7 @@ function EventDetail() {
           <>
             {/* Title + meta */}
             <div className="px-5 pt-1">
-              <h1
-                ref={titleRef}
-                className={
-                  "font-display leading-tight tracking-tight " +
-                  (smallTitle ? "text-xl" : "text-2xl")
-                }
-              >
+              <h1 className="line-clamp-2 font-display text-3xl leading-tight tracking-tight">
                 {ev.name}
               </h1>
               {(dateLabel || ev.location_label) && (
@@ -196,42 +175,48 @@ function EventDetail() {
               )}
             </div>
 
-            {/* Actions + members on one row */}
+            {/* Participants */}
+            {!!members.length && (
+              <button
+                onClick={() => setMembersOpen(true)}
+                className="mt-2 flex items-center gap-2 px-5 text-sm text-muted-foreground transition hover:text-foreground"
+              >
+                <span className="font-medium">
+                  {members.length} participant{members.length > 1 ? "s" : ""}
+                </span>
+                <span className="flex items-center -space-x-2">
+                  {members.slice(0, 3).map((m) => (
+                    <span
+                      key={m.user_id}
+                      className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-secondary text-[10px] font-semibold text-secondary-foreground"
+                    >
+                      {initials(m.display_name)}
+                    </span>
+                  ))}
+                  {members.length > 3 && (
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-semibold text-muted-foreground">
+                      +{members.length - 3}
+                    </span>
+                  )}
+                </span>
+              </button>
+            )}
+
+            {/* Actions */}
             <div className="mt-3 flex items-center gap-2 px-5">
               <PhotoUploader eventId={ev.id} onUploaded={() => photosQ.refetch()} />
               <button
                 onClick={() => setShareOpen(true)}
                 aria-label="Inviter des amis"
                 title="Inviter"
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground transition active:scale-[0.98]"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground transition active:scale-[0.98]"
               >
                 <UserPlus className="h-5 w-5" />
               </button>
-              {!!members.length && (
-                <button
-                  onClick={() => setMembersOpen(true)}
-                  aria-label={`${members.length} participant${members.length > 1 ? "s" : ""}`}
-                  className="ml-auto flex shrink-0 items-center -space-x-2 rounded-full p-1 transition hover:bg-accent/60"
-                >
-                  {members.slice(0, 3).map((m) => (
-                    <span
-                      key={m.user_id}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-secondary text-[11px] font-semibold text-secondary-foreground"
-                    >
-                      {initials(m.display_name)}
-                    </span>
-                  ))}
-                  {members.length > 3 && (
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-semibold text-muted-foreground">
-                      +{members.length - 3}
-                    </span>
-                  )}
-                </button>
-              )}
             </div>
 
             {/* Gallery section */}
-            <div className="mt-4 rounded-t-[2rem] bg-accent/40 pb-8 pt-5">
+            <div className="mt-2 rounded-t-[2rem] bg-accent/40 pb-8 pt-3">
               <PhotoGallery
                 photos={photosQ.data ?? []}
                 members={members.map((m) => ({ user_id: m.user_id, display_name: m.display_name }))}
