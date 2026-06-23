@@ -64,12 +64,14 @@ export function PhotoGallery({
   tags,
   onChange,
   isOwner,
+  count,
 }: {
   photos: Photo[];
   members: Member[];
   tags: Tag[];
   onChange: () => void;
   isOwner: boolean;
+  count?: number;
 }) {
   const { user } = useAuth();
   const [urls, setUrls] = useState<Map<string, string>>(new Map());
