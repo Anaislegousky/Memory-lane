@@ -134,7 +134,7 @@ function EventDetail() {
             className="-ml-1 inline-flex items-center gap-1 rounded-full py-2 pl-1 pr-3 text-sm font-medium text-muted-foreground hover:bg-accent/60"
           >
             <ChevronLeft className="h-5 w-5" />
-            <span>Retour événements</span>
+            <span>Retour</span>
           </Link>
           {isOwner && (
             <button
