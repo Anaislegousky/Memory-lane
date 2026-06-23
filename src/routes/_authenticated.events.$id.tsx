@@ -151,13 +151,7 @@ function EventDetail() {
           <>
             {/* Title + meta */}
             <div className="px-5 pt-1">
-              <h1
-                ref={titleRef}
-                className={
-                  "font-display leading-tight tracking-tight " +
-                  (smallTitle ? "text-xl" : "text-2xl")
-                }
-              >
+              <h1 className="line-clamp-2 font-display text-3xl leading-tight tracking-tight">
                 {ev.name}
               </h1>
               {(dateLabel || ev.location_label) && (
