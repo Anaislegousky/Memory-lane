@@ -29,10 +29,12 @@ const todayISO = () => {
 function NewEventPage() {
   const navigate = useNavigate();
   const createEventFn = useServerFn(createEvent);
+  const searchFn = useServerFn(geocodeSearch);
+  const reverseFn = useServerFn(geocodeReverse);
   const [loc, setLoc] = useState<Loc>({ label: "", lat: null, lng: null });
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState("");
-  const [results, setResults] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
+  const [results, setResults] = useState<{ display_name: string; lat: number; lng: number }[]>([]);
   const [searching, setSearching] = useState(false);
   const [multiDay, setMultiDay] = useState(false);
   const [startDate, setStartDate] = useState(todayISO());
