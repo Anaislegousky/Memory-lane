@@ -6,7 +6,7 @@ import { PhotoUploader } from "@/components/PhotoUploader";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { InviteShareSheet } from "@/components/InviteShareSheet";
 import { BottomNav } from "@/components/BottomNav";
-import { Share2, MapPin, Calendar, Trash2 } from "lucide-react";
+import { Share2, MapPin, Calendar, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useState } from "react";
@@ -171,5 +171,28 @@ function EventDetail() {
       )}
       <BottomNav />
     </div>
+  );
+}
+
+function AddressLabel({ label }: { label: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const short = label.split(",")[0].trim();
+  const hasMore = short.length < label.length;
+  return (
+    <button
+      type="button"
+      onClick={() => hasMore && setExpanded((v) => !v)}
+      className="inline-flex items-start gap-1 text-left"
+    >
+      <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+      <span>
+        {expanded ? label : short}
+        {hasMore && (
+          <span className="ml-1 inline-flex items-center text-muted-foreground">
+            {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </span>
+        )}
+      </span>
+    </button>
   );
 }
