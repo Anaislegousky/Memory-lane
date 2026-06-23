@@ -3,11 +3,12 @@ import imageCompression from "browser-image-compression";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
-import { ImagePlus, Loader2 } from "lucide-react";
+import { ImagePlus, Camera, Loader2 } from "lucide-react";
 
 export function PhotoUploader({ eventId, onUploaded }: { eventId: string; onUploaded: () => void }) {
   const { user } = useAuth();
-  const ref = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
 
   async function onChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -43,7 +44,8 @@ export function PhotoUploader({ eventId, onUploaded }: { eventId: string; onUplo
       }
     }
     setBusy(false);
-    if (ref.current) ref.current.value = "";
+    if (galleryRef.current) galleryRef.current.value = "";
+    if (cameraRef.current) cameraRef.current.value = "";
     if (ok > 0) {
       toast.success(`${ok} photo${ok > 1 ? "s" : ""} ajoutée${ok > 1 ? "s" : ""}`);
       onUploaded();
@@ -53,18 +55,33 @@ export function PhotoUploader({ eventId, onUploaded }: { eventId: string; onUplo
   return (
     <>
       <button
-        onClick={() => ref.current?.click()}
+        onClick={() => galleryRef.current?.click()}
         disabled={busy}
         className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
       >
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
         {busy ? "Envoi…" : "Ajouter des photos"}
       </button>
+      <button
+        onClick={() => cameraRef.current?.click()}
+        disabled={busy}
+        className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-sm font-medium disabled:opacity-60"
+      >
+        <Camera className="h-4 w-4" />
+        Prendre une photo
+      </button>
       <input
-        ref={ref}
+        ref={galleryRef}
         type="file"
         accept="image/*"
         multiple
+        onChange={onChange}
+        className="hidden"
+      />
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
         capture="environment"
         onChange={onChange}
         className="hidden"
