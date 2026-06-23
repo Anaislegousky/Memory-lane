@@ -56,12 +56,6 @@ function EventsPage() {
                       {e.location_label.split(",")[0].trim()}
                     </span>
                   )}
-                  {e.location_label && (
-                    <span className="inline-flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5" />
-                      {e.location_label}
-                    </span>
-                  )}
                 </div>
               </Link>
             </li>
