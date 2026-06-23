@@ -1,10 +1,20 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { signedUrlsFor } from "@/lib/photo-urls";
-import { Tag as TagIcon, X, Trash2, Download, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { Tag as TagIcon, X, Trash2, Download, Check, ChevronLeft, ChevronRight, CheckSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
 import JSZip from "jszip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export type Photo = {
   id: string;
