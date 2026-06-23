@@ -1,10 +1,20 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { signedUrlsFor } from "@/lib/photo-urls";
-import { Tag as TagIcon, X, Trash2, Download, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { Tag as TagIcon, X, Trash2, Download, Check, ChevronLeft, ChevronRight, CheckSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
 import JSZip from "jszip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export type Photo = {
   id: string;
@@ -79,6 +89,7 @@ export function PhotoGallery({
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     const paths = photos.map((p) => p.storage_path);
@@ -142,18 +153,21 @@ export function PhotoGallery({
     }
   }
 
-  async function deleteSelected() {
+  async function performDelete() {
     const toDelete = photos.filter((p) => selected.has(p.id) && (isOwner || p.uploader_id === user?.id));
     if (!toDelete.length) return;
-    if (!confirm(`Supprimer ${toDelete.length} photo(s) ?`)) return;
     const paths = toDelete.map((p) => p.storage_path);
     await supabase.storage.from("event-photos").remove(paths);
     const { error } = await supabase.from("photos").delete().in("id", toDelete.map((p) => p.id));
     if (error) return toast.error(error.message);
     toast.success("Supprimées");
+    setConfirmDelete(false);
     exitSelect();
     onChange();
   }
+
+  const deletableCount = photos.filter((p) => selected.has(p.id) && (isOwner || p.uploader_id === user?.id)).length;
+
 
   if (!photos.length) {
     return (
@@ -165,16 +179,16 @@ export function PhotoGallery({
 
   return (
     <>
-      <div className="mb-1 flex items-center justify-between px-5">
+      <div className="mb-2 flex items-center justify-between gap-3 px-5">
         {!selectMode ? (
           <>
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
               {count ?? photos.length} photo{(count ?? photos.length) > 1 ? "s" : ""}
             </h2>
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setSelectMode(true)}
-                className="rounded-full px-2 py-0.5 text-xs font-medium text-foreground hover:bg-background/70"
+                className="rounded-full px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background/70"
               >
                 Sélectionner
               </button>
@@ -183,54 +197,82 @@ export function PhotoGallery({
                 disabled={busy}
                 aria-label="Tout télécharger"
                 title="Tout télécharger"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-full text-foreground hover:bg-background/70 disabled:opacity-50"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-foreground hover:bg-background/70 disabled:opacity-50"
               >
-                <Download className="h-3.5 w-3.5" />
+                <Download className="h-4 w-4" />
               </button>
             </div>
           </>
         ) : (
           <>
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <button
                 onClick={exitSelect}
-                className="rounded-full px-2 py-0.5 text-xs font-medium text-foreground hover:bg-background/70"
+                aria-label="Annuler la sélection"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground hover:bg-background/70"
               >
-                Désélectionner
+                <X className="h-4 w-4" />
               </button>
-              <span className="text-xs text-muted-foreground">
+              <span className="truncate text-xs font-medium text-foreground">
                 {selected.size} sélectionnée{selected.size > 1 ? "s" : ""}
               </span>
             </div>
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => setSelected(new Set(photos.map((p) => p.id)))}
-                className="rounded-full px-2 py-0.5 text-xs font-medium text-foreground hover:bg-background/70"
+                onClick={() =>
+                  selected.size === photos.length
+                    ? setSelected(new Set())
+                    : setSelected(new Set(photos.map((p) => p.id)))
+                }
+                aria-label="Tout sélectionner"
+                title="Tout sélectionner"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-foreground hover:bg-background/70"
               >
-                Tout
+                <CheckSquare className="h-4 w-4" />
               </button>
               <button
                 onClick={downloadSelected}
                 disabled={busy || !selected.size}
                 aria-label="Télécharger la sélection"
                 title="Télécharger"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-50"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm disabled:opacity-40"
               >
-                <Download className="h-3.5 w-3.5" />
+                <Download className="h-4 w-4" />
               </button>
               <button
-                onClick={deleteSelected}
-                disabled={!selected.size}
+                onClick={() => setConfirmDelete(true)}
+                disabled={!deletableCount}
                 aria-label="Supprimer la sélection"
                 title="Supprimer"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-full text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-destructive hover:bg-destructive/10 disabled:opacity-40"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
           </>
         )}
       </div>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer {deletableCount} photo{deletableCount > 1 ? "s" : ""} ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est définitive. Les photos seront retirées de l'événement.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={performDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       <div className="grid grid-cols-3 gap-0.5 px-0.5 sm:grid-cols-3">
 
