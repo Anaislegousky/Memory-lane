@@ -6,12 +6,13 @@ import { PhotoUploader } from "@/components/PhotoUploader";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { InviteShareSheet } from "@/components/InviteShareSheet";
 import { BottomNav } from "@/components/BottomNav";
-import { ChevronLeft, MapPin, Calendar, Trash2, UserPlus, X } from "lucide-react";
+import { ChevronLeft, MapPin, Calendar, Trash2, UserPlus, X, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useState } from "react";
 import { toast } from "sonner";
 import { shortAddress } from "@/lib/format-address";
+import { EventEditSheet } from "@/components/EventEditSheet";
 
 export const Route = createFileRoute("/_authenticated/events/$id")({
   head: () => ({ meta: [{ title: "Événement — Memories" }] }),
