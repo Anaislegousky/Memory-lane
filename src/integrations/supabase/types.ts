@@ -14,16 +14,298 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      event_members: {
+        Row: {
+          event_id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_members_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          event_date: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          location_label: string | null
+          name: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_date?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          location_label?: string | null
+          name: string
+          owner_id: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          location_label?: string | null
+          name?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
+      friendships: {
+        Row: {
+          created_at: string
+          user_a: string
+          user_b: string
+        }
+        Insert: {
+          created_at?: string
+          user_a: string
+          user_b: string
+        }
+        Update: {
+          created_at?: string
+          user_a?: string
+          user_b?: string
+        }
+        Relationships: []
+      }
+      invite_redemptions: {
+        Row: {
+          id: string
+          invite_id: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          invite_id: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          invite_id?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_redemptions_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "invites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          created_at: string
+          event_id: string | null
+          expires_at: string | null
+          id: string
+          inviter_id: string
+          max_uses: number | null
+          scope: string
+          token: string
+          used_count: number
+        }
+        Insert: {
+          created_at?: string
+          event_id?: string | null
+          expires_at?: string | null
+          id?: string
+          inviter_id: string
+          max_uses?: number | null
+          scope: string
+          token: string
+          used_count?: number
+        }
+        Update: {
+          created_at?: string
+          event_id?: string | null
+          expires_at?: string | null
+          id?: string
+          inviter_id?: string
+          max_uses?: number | null
+          scope?: string
+          token?: string
+          used_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photo_tags: {
+        Row: {
+          created_at: string
+          id: string
+          photo_id: string
+          tagged_user_id: string
+          tagger_id: string
+          x: number | null
+          y: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_id: string
+          tagged_user_id: string
+          tagger_id: string
+          x?: number | null
+          y?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_id?: string
+          tagged_user_id?: string
+          tagger_id?: string
+          x?: number | null
+          y?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_tags_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photos: {
+        Row: {
+          created_at: string
+          event_id: string
+          expires_at: string
+          height: number | null
+          id: string
+          storage_path: string
+          uploader_id: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          expires_at?: string
+          height?: number | null
+          id?: string
+          storage_path: string
+          uploader_id: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          expires_at?: string
+          height?: number | null
+          id?: string
+          storage_path?: string
+          uploader_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_event_member: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_event_owner: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
+      photo_event_id: { Args: { _photo_id: string }; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +432,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
