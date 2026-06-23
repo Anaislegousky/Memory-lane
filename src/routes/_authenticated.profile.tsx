@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { AppShell } from "@/components/AppShell";
 import { InviteShareSheet } from "@/components/InviteShareSheet";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { LogOut, Share2, Download, Trash2 } from "lucide-react";
+import { LogOut, Share2, Download, Trash2, Bell } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profil — Memories" }] }),
@@ -19,6 +19,26 @@ function ProfilePage() {
   const qc = useQueryClient();
   const [share, setShare] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [notifPerm, setNotifPerm] = useState<NotificationPermission | "unsupported">(
+    typeof window !== "undefined" && "Notification" in window ? Notification.permission : "unsupported",
+  );
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setNotifPerm(Notification.permission);
+    }
+  }, []);
+
+  async function enableNotifications() {
+    if (!("Notification" in window)) {
+      toast.error("Notifications non disponibles sur cet appareil");
+      return;
+    }
+    const res = await Notification.requestPermission();
+    setNotifPerm(res);
+    if (res === "granted") toast.success("Notifications activées");
+    else if (res === "denied") toast.error("Vous avez refusé les notifications");
+  }
 
   const profileQ = useQuery({
     queryKey: ["profile", user?.id],
@@ -147,6 +167,35 @@ function ProfilePage() {
             </span>
             <span className="text-xs text-muted-foreground">›</span>
           </button>
+
+          <button
+            onClick={enableNotifications}
+            disabled={notifPerm === "granted" || notifPerm === "unsupported"}
+            className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left disabled:opacity-70"
+          >
+            <span className="flex items-center gap-3">
+              <Bell className="h-5 w-5" />
+              <span>
+                <span className="block">Notifications</span>
+                <span className="block text-xs text-muted-foreground">
+                  {notifPerm === "granted"
+                    ? "Activées — vous serez prévenu 7 jours avant la suppression des photos"
+                    : notifPerm === "denied"
+                      ? "Bloquées dans les réglages de votre navigateur"
+                      : notifPerm === "unsupported"
+                        ? "Non supportées par ce navigateur"
+                        : "Soyez prévenu avant l'auto-suppression des photos"}
+                </span>
+              </span>
+            </span>
+            {notifPerm !== "granted" && notifPerm !== "unsupported" && (
+              <span className="text-xs text-muted-foreground">›</span>
+            )}
+          </button>
+
+
+
+
 
           <button
             onClick={signOut}
