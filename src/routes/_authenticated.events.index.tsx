@@ -16,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/events/")({
 });
 
 function EventsPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const { data: events, isLoading } = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
@@ -36,13 +37,13 @@ function EventsPage() {
     <AppShell
       title="Événements"
       action={
-        <Link
-          to="/events/new"
-          aria-label="Créer un événement"
+        <button
+          onClick={() => setMenuOpen(true)}
+          aria-label="Ajouter"
           className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground"
         >
           <Plus className="h-5 w-5" />
-        </Link>
+        </button>
       }
     >
       {!!expiringQ.data?.length && (
