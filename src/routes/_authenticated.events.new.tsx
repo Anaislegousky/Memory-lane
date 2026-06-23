@@ -83,7 +83,8 @@ function NewEventPage() {
     try {
       const v = schema.parse({
         name: fd.get("name"),
-        event_date: fd.get("event_date") || undefined,
+        event_date: startDate || undefined,
+        end_date: multiDay && endDate ? endDate : undefined,
         location_label: loc.label || (fd.get("location_label") as string) || "",
       });
 
@@ -91,6 +92,7 @@ function NewEventPage() {
         data: {
           name: v.name,
           event_date: v.event_date || null,
+          end_date: v.end_date || null,
           location_label: v.location_label || null,
           lat: loc.lat,
           lng: loc.lng,
