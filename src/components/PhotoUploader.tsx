@@ -3,9 +3,17 @@ import imageCompression from "browser-image-compression";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
-import { ImagePlus, Camera, Loader2 } from "lucide-react";
+import { Plus, Camera, Loader2 } from "lucide-react";
 
-export function PhotoUploader({ eventId, onUploaded }: { eventId: string; onUploaded: () => void }) {
+export function PhotoUploader({
+  eventId,
+  onUploaded,
+  variant = "compact",
+}: {
+  eventId: string;
+  onUploaded: () => void;
+  variant?: "compact" | "full";
+}) {
   const { user } = useAuth();
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -57,18 +65,20 @@ export function PhotoUploader({ eventId, onUploaded }: { eventId: string; onUplo
       <button
         onClick={() => galleryRef.current?.click()}
         disabled={busy}
-        className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+        aria-label="Ajouter des photos"
+        className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-base font-semibold text-primary-foreground shadow-sm transition active:scale-[0.98] disabled:opacity-60"
       >
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-        {busy ? "Envoi…" : "Ajouter des photos"}
+        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
+        {busy ? "Envoi…" : "Ajouter"}
       </button>
       <button
         onClick={() => cameraRef.current?.click()}
         disabled={busy}
-        className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-sm font-medium disabled:opacity-60"
+        aria-label="Prendre une photo"
+        title="Prendre une photo"
+        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-accent-foreground transition active:scale-[0.98] disabled:opacity-60"
       >
-        <Camera className="h-4 w-4" />
-        Prendre une photo
+        <Camera className="h-5 w-5" />
       </button>
       <input
         ref={galleryRef}
