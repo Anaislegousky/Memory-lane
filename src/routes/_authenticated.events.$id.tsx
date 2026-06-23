@@ -6,7 +6,15 @@ import { PhotoUploader } from "@/components/PhotoUploader";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { InviteShareSheet } from "@/components/InviteShareSheet";
 import { BottomNav } from "@/components/BottomNav";
-import { Share2, MapPin, Calendar, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  ChevronLeft,
+  MapPin,
+  Calendar,
+  Trash2,
+  UserPlus,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useState } from "react";
@@ -17,6 +25,16 @@ export const Route = createFileRoute("/_authenticated/events/$id")({
   head: () => ({ meta: [{ title: "Événement — Memories" }] }),
   component: EventDetail,
 });
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .map((n) => n[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
 
 function EventDetail() {
   const { id } = Route.useParams();
@@ -102,67 +120,104 @@ function EventDetail() {
     navigate({ to: "/events" });
   }
 
+  const members = membersQ.data ?? [];
+  const photoCount = photosQ.data?.length ?? 0;
+
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="mx-auto max-w-md px-4 py-4">
-        <Link to="/events" className="text-sm text-muted-foreground">← Événements</Link>
+      <div className="mx-auto max-w-md">
+        {/* Top nav */}
+        <div className="flex items-center justify-between px-4 pt-3">
+          <Link
+            to="/events"
+            aria-label="Retour"
+            className="-ml-2 inline-flex h-10 w-10 items-center justify-center rounded-full text-foreground hover:bg-accent/60"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Link>
+          {isOwner && (
+            <button
+              onClick={deleteEvent}
+              aria-label="Supprimer l'événement"
+              className="-mr-2 inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          )}
+        </div>
 
         {ev && (
           <>
-            <h1 className="mt-3 font-display text-3xl tracking-tight">{ev.name}</h1>
-            <div className="mt-2 flex flex-wrap items-start gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              {ev.event_date && (
-                <span className="inline-flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5" />
-                  {ev.end_date && ev.end_date !== ev.event_date
-                    ? `${format(new Date(ev.event_date), "d MMM", { locale: fr })} – ${format(new Date(ev.end_date), "d MMM yyyy", { locale: fr })}`
-                    : format(new Date(ev.event_date), "d MMM yyyy", { locale: fr })}
-                </span>
-              )}
-              {ev.location_label && <AddressLabel label={ev.location_label} />}
+            {/* Title + meta */}
+            <div className="px-5 pt-2">
+              <h1 className="font-display text-3xl leading-tight tracking-tight">{ev.name}</h1>
+              <div className="mt-3 space-y-1.5 text-base text-muted-foreground">
+                {ev.event_date && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 flex-shrink-0" />
+                    <span>
+                      {ev.end_date && ev.end_date !== ev.event_date
+                        ? `${format(new Date(ev.event_date), "d MMM", { locale: fr })} – ${format(new Date(ev.end_date), "d MMM yyyy", { locale: fr })}`
+                        : format(new Date(ev.event_date), "d MMMM yyyy", { locale: fr })}
+                    </span>
+                  </div>
+                )}
+                {ev.location_label && <AddressLabel label={ev.location_label} />}
+              </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+            {/* Actions */}
+            <div className="mt-6 flex items-center gap-2.5 px-5">
               <PhotoUploader eventId={ev.id} onUploaded={() => photosQ.refetch()} />
               <button
                 onClick={() => setShareOpen(true)}
-                className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-2 text-sm"
+                aria-label="Inviter des amis"
+                title="Inviter"
+                className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-accent-foreground transition active:scale-[0.98]"
               >
-                <Share2 className="h-4 w-4" /> Inviter
+                <UserPlus className="h-5 w-5" />
               </button>
-              {isOwner && (
-                <button
-                  onClick={deleteEvent}
-                  className="ml-auto inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-2 text-sm text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )}
             </div>
 
-            {!!membersQ.data?.length && (
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {membersQ.data.map((m) => (
-                  <span key={m.user_id} className="rounded-full bg-accent px-2.5 py-0.5 text-xs">
-                    {m.display_name}
-                    {m.role === "owner" ? " · organisateur" : ""}
-                  </span>
-                ))}
+            {/* Members */}
+            {!!members.length && (
+              <div className="mt-5 flex items-center gap-3 px-5">
+                <div className="flex -space-x-2">
+                  {members.slice(0, 4).map((m) => (
+                    <div
+                      key={m.user_id}
+                      title={m.display_name}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-background bg-secondary text-xs font-semibold text-secondary-foreground"
+                    >
+                      {initials(m.display_name)}
+                    </div>
+                  ))}
+                  {members.length > 4 && (
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-background bg-muted text-[11px] font-semibold text-muted-foreground">
+                      +{members.length - 4}
+                    </div>
+                  )}
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {members.length} participant{members.length > 1 ? "s" : ""}
+                </span>
               </div>
             )}
 
-            <div className="mt-6">
+            {/* Gallery section */}
+            <div className="mt-8 rounded-t-[2rem] bg-accent/40 pb-8 pt-6">
               <PhotoGallery
                 photos={photosQ.data ?? []}
-                members={(membersQ.data ?? []).map((m) => ({ user_id: m.user_id, display_name: m.display_name }))}
+                members={members.map((m) => ({ user_id: m.user_id, display_name: m.display_name }))}
                 tags={tagsQ.data ?? []}
                 onChange={() => { photosQ.refetch(); tagsQ.refetch(); }}
                 isOwner={isOwner}
+                count={photoCount}
               />
+              <p className="mt-6 px-5 text-center text-xs text-muted-foreground">
+                Les photos sont privées et sont supprimées automatiquement après 90 jours.
+              </p>
             </div>
-            <p className="mt-6 text-center text-xs text-muted-foreground">
-              Les photos sont privées aux membres de l'événement et sont automatiquement supprimées au bout de 90 jours.
-            </p>
           </>
         )}
       </div>
@@ -183,14 +238,14 @@ function AddressLabel({ label }: { label: string }) {
     <button
       type="button"
       onClick={() => hasMore && setExpanded((v) => !v)}
-      className="inline-flex items-start gap-1 text-left"
+      className="flex items-center gap-2 text-left"
     >
-      <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+      <MapPin className="h-4 w-4 flex-shrink-0" />
       <span>
         {expanded ? label : short}
         {hasMore && (
-          <span className="ml-1 inline-flex items-center text-muted-foreground">
-            {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          <span className="ml-1 inline-flex items-center align-middle text-muted-foreground/70">
+            {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           </span>
         )}
       </span>
