@@ -26,13 +26,18 @@ const signinSchema = z.object({
   password: z.string().min(1),
 });
 
+function getSafeRedirect(redirect: string | undefined) {
+  if (!redirect || !redirect.startsWith("/") || redirect.startsWith("/auth")) return "/events";
+  return redirect;
+}
+
 function AuthPage() {
   const search = useSearch({ from: "/auth" });
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">(search.mode ?? "signup");
   const [busy, setBusy] = useState(false);
-  const redirectTo = search.redirect || "/events";
+  const redirectTo = getSafeRedirect(search.redirect);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: redirectTo, replace: true });
@@ -65,13 +70,13 @@ function AuthPage() {
           toast.success("Compte créé. Vérifiez votre e-mail pour confirmer.");
         } else {
           toast.success("Bienvenue !");
-          navigate({ to: redirectTo });
+          navigate({ to: redirectTo, replace: true });
         }
       } else {
         const v = signinSchema.parse({ email: fd.get("email"), password: fd.get("password") });
         const { error } = await supabase.auth.signInWithPassword(v);
         if (error) throw error;
-        navigate({ to: redirectTo });
+        navigate({ to: redirectTo, replace: true });
       }
     } catch (err: any) {
       toast.error(err?.message || "Une erreur est survenue");
