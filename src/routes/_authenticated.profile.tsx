@@ -190,7 +190,10 @@ function ProfilePage() {
             </span>
             {notifPerm !== "granted" && notifPerm !== "unsupported" && (
               <span className="text-xs text-muted-foreground">›</span>
+            )}
           </button>
+
+
 
 
 
