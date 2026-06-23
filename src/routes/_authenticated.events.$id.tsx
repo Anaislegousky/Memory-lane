@@ -6,7 +6,7 @@ import { PhotoUploader } from "@/components/PhotoUploader";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { InviteShareSheet } from "@/components/InviteShareSheet";
 import { BottomNav } from "@/components/BottomNav";
-import { Share2, MapPin, Calendar, Trash2 } from "lucide-react";
+import { Share2, MapPin, Calendar, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useState } from "react";
@@ -28,7 +28,7 @@ function EventDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("id, owner_id, name, event_date, location_label, lat, lng")
+        .select("id, owner_id, name, event_date, end_date, location_label, lat, lng")
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -109,19 +109,16 @@ function EventDetail() {
         {ev && (
           <>
             <h1 className="mt-3 font-display text-3xl tracking-tight">{ev.name}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <div className="mt-2 flex flex-wrap items-start gap-x-4 gap-y-1 text-sm text-muted-foreground">
               {ev.event_date && (
                 <span className="inline-flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5" />
-                  {format(new Date(ev.event_date), "d MMM yyyy", { locale: fr })}
+                  {ev.end_date && ev.end_date !== ev.event_date
+                    ? `${format(new Date(ev.event_date), "d MMM", { locale: fr })} – ${format(new Date(ev.end_date), "d MMM yyyy", { locale: fr })}`
+                    : format(new Date(ev.event_date), "d MMM yyyy", { locale: fr })}
                 </span>
               )}
-              {ev.location_label && (
-                <span className="inline-flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {ev.location_label}
-                </span>
-              )}
+              {ev.location_label && <AddressLabel label={ev.location_label} />}
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -174,5 +171,28 @@ function EventDetail() {
       )}
       <BottomNav />
     </div>
+  );
+}
+
+function AddressLabel({ label }: { label: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const short = label.split(",")[0].trim();
+  const hasMore = short.length < label.length;
+  return (
+    <button
+      type="button"
+      onClick={() => hasMore && setExpanded((v) => !v)}
+      className="inline-flex items-start gap-1 text-left"
+    >
+      <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+      <span>
+        {expanded ? label : short}
+        {hasMore && (
+          <span className="ml-1 inline-flex items-center text-muted-foreground">
+            {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </span>
+        )}
+      </span>
+    </button>
   );
 }

@@ -16,8 +16,15 @@ type Loc = { label: string; lat: number | null; lng: number | null };
 const schema = z.object({
   name: z.string().trim().min(2).max(80),
   event_date: z.string().optional(),
+  end_date: z.string().optional(),
   location_label: z.string().trim().max(200).optional().or(z.literal("")),
 });
+
+const todayISO = () => {
+  const d = new Date();
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+};
 
 function NewEventPage() {
   const navigate = useNavigate();
@@ -27,6 +34,9 @@ function NewEventPage() {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
   const [searching, setSearching] = useState(false);
+  const [multiDay, setMultiDay] = useState(false);
+  const [startDate, setStartDate] = useState(todayISO());
+  const [endDate, setEndDate] = useState(todayISO());
 
   async function useMyLocation() {
     if (!("geolocation" in navigator)) {
@@ -73,7 +83,8 @@ function NewEventPage() {
     try {
       const v = schema.parse({
         name: fd.get("name"),
-        event_date: fd.get("event_date") || undefined,
+        event_date: startDate || undefined,
+        end_date: multiDay && endDate ? endDate : undefined,
         location_label: loc.label || (fd.get("location_label") as string) || "",
       });
 
@@ -81,6 +92,7 @@ function NewEventPage() {
         data: {
           name: v.name,
           event_date: v.event_date || null,
+          end_date: v.end_date || null,
           location_label: v.location_label || null,
           lat: loc.lat,
           lng: loc.lng,
@@ -117,14 +129,46 @@ function NewEventPage() {
               className="w-full rounded-xl border border-input bg-card px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </label>
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-medium">Date</span>
-            <input
-              type="date"
-              name="event_date"
-              className="w-full rounded-xl border border-input bg-card px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </label>
+          <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium">
+                {multiDay ? "Date de début" : "Date"}
+              </span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  if (!multiDay || endDate < e.target.value) setEndDate(e.target.value);
+                }}
+                className="w-full rounded-xl border border-input bg-background px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={multiDay}
+                onChange={(e) => {
+                  setMultiDay(e.target.checked);
+                  if (e.target.checked && endDate < startDate) setEndDate(startDate);
+                }}
+                className="h-4 w-4 rounded border-input"
+              />
+              Plusieurs jours
+            </label>
+            {multiDay && (
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium">Date de fin</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  min={startDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full rounded-xl border border-input bg-background px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+            )}
+          </div>
 
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-sm font-medium">Lieu</p>
