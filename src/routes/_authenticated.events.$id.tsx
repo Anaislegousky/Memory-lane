@@ -256,7 +256,7 @@ function EventDetail() {
       )}
 
       {shareOpen && ev && (
-        <InviteShareSheet scope="event" eventId={ev.id} onClose={() => setShareOpen(false)} />
+        <InviteShareSheet scope="event" eventId={ev.id} eventName={ev.name} onClose={() => setShareOpen(false)} />
       )}
 
       {editOpen && ev && (
