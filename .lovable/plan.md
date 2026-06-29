@@ -1,71 +1,45 @@
-## Objectifs
+## Corrections demandées
 
-Réduire la friction à 3 endroits clés : invitation, création de compte, et longueur de session. Alléger la home.
+### 1. Import multi-photos → un seul événement multi-jours
+**Fichier**: `src/lib/exif-import.ts` + `src/components/CreateMenu.tsx`
 
-## 1. Invitation rapide façon "share sheet" (priorité événement)
+Actuellement `groupPhotosIntoEvents` regroupe par jour → plusieurs événements. Nouvelle logique :
+- **Un seul `EventGroup`** quand l'utilisateur sélectionne plusieurs photos en une fois.
+- Calcul de `event_date` = date la plus ancienne, `end_date` = date la plus récente (depuis EXIF).
+- GPS : centroïde de toutes les photos géotaguées (si présentes), sinon `null`.
+- Geocodage inverse une seule fois pour le centroïde.
+- Passer `end_date` à `createEventFn` dans `CreateMenu.tsx` (actuellement forcé à `null`).
+- L'aperçu (preview) affiche un seul bloc avec date début + date fin éditables.
 
-Refondre `InviteShareSheet.tsx` pour générer le lien **immédiatement à l'ouverture** (plus de bouton « Créer le lien »).
+### 2. Titre automatique plus court
+Format actuel : `"Rennes — 12 septembre 2026"` / `"Souvenirs du 12 septembre 2026"`.
 
-Grille d'actions one-tap (icônes rondes colorées, style screenshots) :
-- **Copier** → `navigator.clipboard`
-- **WhatsApp** → `https://wa.me/?text=<msg+url>`
-- **Messenger** → `fb-messenger://share?link=` (fallback `https://www.messenger.com/`)
-- **Telegram** → `https://t.me/share/url?url=...&text=...`
-- **Email** → `mailto:?subject=...&body=...`
-- **SMS** → `sms:?body=...`
-- **Partager…** → `navigator.share()` (système natif iOS/Android, fallback masqué desktop)
+Nouveau format compact :
+- Avec lieu, 1 jour : `Rennes · 12 sept`
+- Avec lieu, plusieurs jours : `Rennes · 12–14 sept`
+- Sans lieu, 1 jour : `Souvenirs · 12 sept`
+- Sans lieu, plusieurs jours : `Souvenirs · 12–14 sept`
+- Si années différentes : ajout `2026`.
 
-Le lien est pré-créé en `useEffect` au montage (état `creating → ready`). Pendant ~300ms les boutons sont désactivés avec spinner discret. URL toujours visible en bas, copiable.
+### 3. Boutons de partage WhatsApp/Telegram/Messenger/SMS/Email
+**Fichier**: `src/components/InviteShareSheet.tsx`
 
-Idem pour invitation réseau (scope=network), même UI.
+Pas besoin d'API. Le problème vient de `window.open(...)` sur mobile : Safari iOS bloque souvent les nouvelles fenêtres ouvertes programmatiquement, et `sms:`/`mailto:` via `window.location.href` peuvent être ignorés depuis un overlay.
 
-## 2. « Continuer avec un pseudo » (sans email)
+Correctif :
+- Remplacer les `<button onClick={openExternal(...)}>` par de vrais **`<a href="…" target="_blank" rel="noopener">`** stylés comme des boutons. Les liens ancrés conservent le geste utilisateur et fonctionnent nativement avec les schémas `whatsapp://`, `sms:`, `mailto:`, `tg://`.
+- Désactiver l'ancre tant que `link` n'est pas généré (via `aria-disabled` + `pointer-events: none`).
+- Retirer Messenger (nécessite un vrai `app_id` Facebook enregistré — actuellement le `140586622674265` factice ne fonctionne pas). Remplacer par l'icône "Partager…" natif (`navigator.share`) qui couvre Messenger sur mobile.
 
-Sur `/auth`, ajouter une 3e option en plus de Sign in / Sign up :
+### 4. Boutons « Ajouter » et caméra dans l'événement
+**Fichier**: `src/components/PhotoUploader.tsx`
 
-```
-[ Continuer avec un pseudo ]   ← bouton secondaire mis en avant
-```
+Les inputs cachés utilisent `className="hidden"` (display:none). Sur certains WebView/Safari iOS, déclencher `.click()` sur un input `display:none` est bloqué.
 
-Flow :
-1. Champ unique « Votre prénom ou pseudo »
-2. Clic → `supabase.auth.signInAnonymously()` avec `options.data.display_name = pseudo`
-3. Le trigger `handle_new_user` existant remplit déjà `profiles.display_name`
-4. Redirige vers `redirect` (ou `/events`)
+Correctif : remplacer `hidden` par un style « visually hidden » (positionnement absolu, opacité 0) afin que `inputRef.current.click()` soit toujours honoré sur mobile.
 
-Activation backend : `external_anonymous_users_enabled: true` via `supabase--configure_auth`.
-
-Sur le profil, ajouter un bandeau « Sauvegarder mon compte » qui propose de lier un email + mot de passe (`supabase.auth.updateUser({ email, password })`) pour ne pas perdre l'accès. Pas bloquant.
-
-Note GDPR : ajouter ligne dans `/privacy` expliquant le mode invité (données liées à un identifiant anonyme, perdues si effacement du navigateur).
-
-## 3. Session 30 jours
-
-Le JWT access token reste court (1h, non modifiable côté client), mais le **refresh token** peut durer 30 jours. Configuration via `supabase--configure_auth` n'expose pas directement ça → il faut ajuster via le service auth. Plan :
-- Activer `autoRefreshToken: true` (déjà fait dans `client.ts`)
-- Demander d'étendre `jwt_exp` côté projet n'est pas exposé sur Lovable Cloud ; le refresh token par défaut est déjà long (~30j inactivité + 60j absolue chez Supabase). Vérifier `supabase/config.toml` et étendre `[auth] jwt_expiry` si possible (sinon documenter la limite).
-- Ajouter un `visibilitychange` listener qui appelle `supabase.auth.refreshSession()` au retour sur l'app pour éviter toute expiration ressentie.
-
-## 4. Alléger la home (`src/routes/index.tsx`)
-
-- Réduire le hero : titre court + 1 sous-titre court (au lieu du paragraphe actuel)
-- Supprimer / fusionner les sections secondaires redondantes
-- Garder : tagline, 1 CTA principal « Commencer », 1 lien discret « J'ai déjà un compte »
-- Optionnel : 3 mini-features en 1 ligne d'icônes (au lieu de blocs textuels)
-
-## Détails techniques
-
-| Fichier | Action |
-|---|---|
-| `src/components/InviteShareSheet.tsx` | Refonte UI : grille 6 boutons, auto-création du lien au mount |
-| `src/routes/auth.tsx` | Ajouter bouton « Continuer avec un pseudo » + petit form pseudo |
-| `src/routes/_authenticated.profile.tsx` | Bandeau « Sauvegarder mon compte » si `user.is_anonymous` |
-| `src/routes/index.tsx` | Réduire le contenu textuel |
-| `src/routes/privacy.tsx` | Paragraphe mode invité |
-| Backend | `configure_auth` → `external_anonymous_users_enabled: true` |
-| `src/routes/__root.tsx` ou provider | Listener `visibilitychange` → `refreshSession()` |
-
-## Points de confirmation
-
-- OK pour activer **l'auth anonyme Supabase** (un compte est techniquement créé mais sans email/mdp) ?
-- Sur la home, je peux te montrer 2 versions (très épurée vs modérée) ou je tranche direct ?
+### Vérification
+Après build :
+- Importer 5 photos prises sur 3 jours → 1 seul événement multi-jours créé avec titre court.
+- Cliquer WhatsApp / Telegram / SMS / Email depuis mobile → ouvre l'app correspondante.
+- Cliquer Ajouter / Caméra dans la page événement → ouvre la galerie / la caméra.
