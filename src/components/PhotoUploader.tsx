@@ -16,6 +16,7 @@ export function PhotoUploader({
   variant?: "compact" | "full";
 }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
