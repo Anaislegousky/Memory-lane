@@ -58,7 +58,7 @@ function AuthPage() {
           email: v.email,
           password: v.password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
             data: { display_name: v.display_name },
           },
         });
@@ -123,6 +123,23 @@ function AuthPage() {
           className="mt-6 w-full text-center text-sm text-muted-foreground underline"
         >
           {mode === "signup" ? "J'ai déjà un compte" : "Créer un nouveau compte"}
+        </button>
+
+        <button
+          onClick={async () => {
+            const email = (document.querySelector<HTMLInputElement>('input[name="email"]')?.value || "").trim();
+            if (!email) return toast.error("Saisissez votre e-mail d'abord");
+            const { error } = await supabase.auth.resend({
+              type: "signup",
+              email,
+              options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+            });
+            if (error) toast.error(error.message);
+            else toast.success("E-mail de confirmation renvoyé");
+          }}
+          className="mt-3 w-full text-center text-xs text-muted-foreground underline"
+        >
+          Renvoyer l'e-mail de confirmation
         </button>
       </div>
     </div>

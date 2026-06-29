@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
 import JSZip from "jszip";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -84,6 +85,7 @@ export function PhotoGallery({
   count?: number;
 }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [urls, setUrls] = useState<Map<string, string>>(new Map());
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [selectMode, setSelectMode] = useState(false);
@@ -163,6 +165,7 @@ export function PhotoGallery({
     toast.success("Supprimées");
     setConfirmDelete(false);
     exitSelect();
+    queryClient.invalidateQueries({ queryKey: ["events-map"] });
     onChange();
   }
 
@@ -359,6 +362,7 @@ function Lightbox({
   const [showTags, setShowTags] = useState(false);
   const tagged = new Set(tags.map((t) => t.tagged_user_id));
   const namesById = new Map(members.map((m) => [m.user_id, m.display_name]));
+  const queryClient = useQueryClient();
 
   const prev = useCallback(() => onIndex((index - 1 + photos.length) % photos.length), [index, photos.length, onIndex]);
   const next = useCallback(() => onIndex((index + 1) % photos.length), [index, photos.length, onIndex]);
@@ -414,6 +418,7 @@ function Lightbox({
     const { error } = await supabase.from("photos").delete().eq("id", photo.id);
     if (error) return toast.error(error.message);
     toast.success("Supprimée");
+    queryClient.invalidateQueries({ queryKey: ["events-map"] });
     onClose();
     onChange();
   }

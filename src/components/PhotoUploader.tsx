@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
 import { Plus, Camera, Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function PhotoUploader({
   eventId,
@@ -15,6 +16,7 @@ export function PhotoUploader({
   variant?: "compact" | "full";
 }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -56,6 +58,7 @@ export function PhotoUploader({
     if (cameraRef.current) cameraRef.current.value = "";
     if (ok > 0) {
       toast.success(`${ok} photo${ok > 1 ? "s" : ""} ajoutée${ok > 1 ? "s" : ""}`);
+      queryClient.invalidateQueries({ queryKey: ["events-map"] });
       onUploaded();
     }
   }
