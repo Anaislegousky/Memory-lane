@@ -85,6 +85,7 @@ export function PhotoGallery({
   count?: number;
 }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [urls, setUrls] = useState<Map<string, string>>(new Map());
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [selectMode, setSelectMode] = useState(false);
