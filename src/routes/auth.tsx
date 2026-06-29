@@ -58,7 +58,7 @@ function AuthPage() {
           email: v.email,
           password: v.password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
             data: { display_name: v.display_name },
           },
         });
