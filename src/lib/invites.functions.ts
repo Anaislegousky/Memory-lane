@@ -4,6 +4,42 @@ import { z } from "zod";
 
 const input = z.object({ token: z.string().min(8).max(64) });
 
+export const getInvitePreview = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => input.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: invite } = await supabaseAdmin
+      .from("invites")
+      .select("scope, event_id, inviter_id, expires_at, max_uses, used_count")
+      .eq("token", data.token)
+      .maybeSingle();
+    if (!invite) return { valid: false as const };
+    const expired = invite.expires_at ? new Date(invite.expires_at) < new Date() : false;
+    const exhausted = invite.max_uses ? invite.used_count >= invite.max_uses : false;
+    if (expired || exhausted) return { valid: false as const };
+
+    let event_name: string | null = null;
+    if (invite.scope === "event" && invite.event_id) {
+      const { data: ev } = await supabaseAdmin
+        .from("events")
+        .select("name")
+        .eq("id", invite.event_id)
+        .maybeSingle();
+      event_name = ev?.name ?? null;
+    }
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("display_name")
+      .eq("id", invite.inviter_id)
+      .maybeSingle();
+    return {
+      valid: true as const,
+      scope: invite.scope as "network" | "event",
+      event_name,
+      inviter_name: prof?.display_name ?? null,
+    };
+  });
+
 export const redeemInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => input.parse(d))

@@ -3,9 +3,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import imageCompression from "browser-image-compression";
-import { ImagePlus, Camera, CalendarPlus, X, Loader2, MapPin, Calendar } from "lucide-react";
+import { ImagePlus, Camera, CalendarPlus, X, Loader2, MapPin, Locate, Search } from "lucide-react";
 import { toast } from "sonner";
-import { createEvent } from "@/lib/events.functions";
+import { createEvent, geocodeSearch, geocodeReverse } from "@/lib/events.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import {
@@ -13,7 +13,6 @@ import {
   groupPhotosIntoEvents,
   type EventGroup,
 } from "@/lib/exif-import";
-import { shortAddress } from "@/lib/format-address";
 
 type Phase = "menu" | "reading" | "preview" | "uploading";
 
@@ -191,50 +190,19 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
         {phase === "preview" && (
           <div className="max-h-[70vh] space-y-3 overflow-y-auto">
             {groups.map((g) => (
-              <div key={g.id} className="space-y-2 rounded-2xl border border-border bg-background p-3">
+              <div key={g.id} className="space-y-3 rounded-2xl border border-border bg-background p-3">
                 <input
                   value={g.name}
                   onChange={(e) => updateGroup(g.id, { name: e.target.value })}
                   className="w-full rounded-lg border border-input bg-card px-3 py-2 font-display text-lg"
                 />
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <label className="inline-flex items-center gap-1 rounded-full border border-input bg-card px-2 py-1">
-                    <Calendar className="h-3 w-3" />
-                    <input
-                      type="date"
-                      value={g.event_date}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        const patch: Partial<EventGroup> = { event_date: v };
-                        if (g.end_date && g.end_date < v) patch.end_date = v;
-                        updateGroup(g.id, patch);
-                      }}
-                      className="bg-transparent outline-none"
-                    />
-                  </label>
-                  <label className="inline-flex items-center gap-1 rounded-full border border-input bg-card px-2 py-1">
-                    <span className="text-muted-foreground">→</span>
-                    <input
-                      type="date"
-                      value={g.end_date ?? g.event_date}
-                      min={g.event_date}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        updateGroup(g.id, { end_date: v === g.event_date ? null : v });
-                      }}
-                      className="bg-transparent outline-none"
-                    />
-                  </label>
-                  <label className="inline-flex flex-1 items-center gap-1 rounded-full border border-input bg-card px-2 py-1">
-                    <MapPin className="h-3 w-3" />
-                    <input
-                      placeholder="Lieu (optionnel)"
-                      value={shortAddress(g.location_label)}
-                      onChange={(e) => updateGroup(g.id, { location_label: e.target.value })}
-                      className="w-full bg-transparent outline-none"
-                    />
-                  </label>
-                </div>
+
+                {/* Date card — same shape as /events/new */}
+                <DateCard group={g} onChange={(patch) => updateGroup(g.id, patch)} />
+
+                {/* Location card — same shape as /events/new */}
+                <LocationCard group={g} onChange={(patch) => updateGroup(g.id, patch)} />
+
                 <div className="flex gap-1.5 overflow-x-auto">
                   {g.photos.slice(0, 8).map((p, i) => (
                     <PhotoThumb key={i} file={p.file} />
@@ -308,5 +276,189 @@ function PhotoThumb({ file }: { file: File }) {
       alt=""
       className="h-14 w-14 flex-shrink-0 rounded-lg object-cover bg-accent"
     />
+  );
+}
+
+function DateCard({
+  group,
+  onChange,
+}: {
+  group: EventGroup;
+  onChange: (patch: Partial<EventGroup>) => void;
+}) {
+  const multiDay = !!group.end_date && group.end_date !== group.event_date;
+  return (
+    <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <label className="block">
+        <span className="mb-1.5 block text-sm font-medium">
+          {multiDay ? "Date de début" : "Date"}
+        </span>
+        <input
+          type="date"
+          value={group.event_date}
+          onChange={(e) => {
+            const v = e.target.value;
+            const patch: Partial<EventGroup> = { event_date: v };
+            if (group.end_date && group.end_date < v) patch.end_date = v;
+            onChange(patch);
+          }}
+          className="w-full rounded-xl border border-input bg-background px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+        />
+      </label>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={multiDay}
+          onChange={(e) => {
+            if (e.target.checked) onChange({ end_date: group.event_date });
+            else onChange({ end_date: null });
+          }}
+          className="h-4 w-4 rounded border-input"
+        />
+        Plusieurs jours
+      </label>
+      {multiDay && (
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium">Date de fin</span>
+          <input
+            type="date"
+            value={group.end_date ?? group.event_date}
+            min={group.event_date}
+            onChange={(e) => onChange({ end_date: e.target.value })}
+            className="w-full rounded-xl border border-input bg-background px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          />
+        </label>
+      )}
+    </div>
+  );
+}
+
+function LocationCard({
+  group,
+  onChange,
+}: {
+  group: EventGroup;
+  onChange: (patch: Partial<EventGroup>) => void;
+}) {
+  const searchFn = useServerFn(geocodeSearch);
+  const reverseFn = useServerFn(geocodeReverse);
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState<{ display_name: string; lat: number; lng: number }[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  // Debounced autocomplete as the user types
+  useEffect(() => {
+    const q = search.trim();
+    if (q.length < 3) {
+      setResults([]);
+      return;
+    }
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await searchFn({ data: { q } });
+        setResults(res);
+      } catch {
+        /* silent */
+      } finally {
+        setSearching(false);
+      }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [search, searchFn]);
+
+  async function useMyLocation() {
+    if (!("geolocation" in navigator)) {
+      toast.error("Géolocalisation non disponible");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          const { display_name } = await reverseFn({ data: { lat: latitude, lng: longitude } });
+          onChange({ location_label: display_name, lat: latitude, lng: longitude });
+        } catch {
+          onChange({
+            location_label: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+            lat: latitude,
+            lng: longitude,
+          });
+        }
+      },
+      () => toast.error("Impossible d'obtenir votre position"),
+      { enableHighAccuracy: false, timeout: 8000 },
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <p className="text-sm font-medium">Lieu</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Détecté depuis vos photos si possible. Modifiable.
+      </p>
+
+      <button
+        type="button"
+        onClick={useMyLocation}
+        className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-sm"
+      >
+        <Locate className="h-4 w-4" /> Utiliser ma position
+      </button>
+
+      <div className="mt-3 flex gap-2">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Ville ou adresse"
+          className="flex-1 rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+        />
+        <span className="grid place-items-center px-1 text-muted-foreground">
+          {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+        </span>
+      </div>
+      {results.length > 0 && (
+        <ul className="mt-2 max-h-48 overflow-auto rounded-xl border border-border bg-background text-sm">
+          {results.map((r, i) => (
+            <li key={i}>
+              <button
+                type="button"
+                onClick={() => {
+                  onChange({ location_label: r.display_name, lat: r.lat, lng: r.lng });
+                  setResults([]);
+                  setSearch("");
+                }}
+                className="block w-full px-3 py-2 text-left hover:bg-accent"
+              >
+                {r.display_name}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {group.location_label && (
+        <p className="mt-3 inline-flex max-w-full items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs">
+          <MapPin className="h-3 w-3 flex-shrink-0" />
+          <span className="truncate">{group.location_label}</span>
+          <button
+            type="button"
+            onClick={() => onChange({ location_label: "", lat: null, lng: null })}
+            className="ml-1 text-muted-foreground"
+            aria-label="Effacer le lieu"
+          >
+            ×
+          </button>
+        </p>
+      )}
+
+      {!group.location_label && (
+        <input
+          placeholder="Ou saisissez un libellé (ex. chez Anna)"
+          onChange={(e) => onChange({ location_label: e.target.value })}
+          className="mt-3 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+        />
+      )}
+    </div>
   );
 }
