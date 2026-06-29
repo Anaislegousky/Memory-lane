@@ -15,6 +15,7 @@ export const Route = createFileRoute("/_authenticated/map")({
 function MapPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["events-map"],
+    refetchOnMount: "always",
     queryFn: async () => {
       const { data: events, error } = await supabase
         .from("events")
