@@ -1,42 +1,71 @@
-# Plan
+## Objectifs
 
-## 1. Rafraîchir automatiquement les miniatures de la carte
+Réduire la friction à 3 endroits clés : invitation, création de compte, et longueur de session. Alléger la home.
 
-La query `["events-map"]` n'est jamais invalidée quand on ajoute/supprime des photos.
+## 1. Invitation rapide façon "share sheet" (priorité événement)
 
-- **`PhotoUploader.tsx`** : ajouter `const queryClient = useQueryClient()` et invalider `["events-map"]` après chaque upload réussi (en plus des invalidations photos existantes).
-- **`PhotoGallery.tsx`** : même invalidation après suppression (simple et en masse).
-- **`_authenticated.map.tsx`** : `refetchOnMount: "always"` pour des miniatures fraîches au retour sur l'onglet Carte.
+Refondre `InviteShareSheet.tsx` pour générer le lien **immédiatement à l'ouverture** (plus de bouton « Créer le lien »).
 
-## 2. Lien de confirmation Gmail qui ne fonctionne pas
+Grille d'actions one-tap (icônes rondes colorées, style screenshots) :
+- **Copier** → `navigator.clipboard`
+- **WhatsApp** → `https://wa.me/?text=<msg+url>`
+- **Messenger** → `fb-messenger://share?link=` (fallback `https://www.messenger.com/`)
+- **Telegram** → `https://t.me/share/url?url=...&text=...`
+- **Email** → `mailto:?subject=...&body=...`
+- **SMS** → `sms:?body=...`
+- **Partager…** → `navigator.share()` (système natif iOS/Android, fallback masqué desktop)
 
-**Cause probable.** Dans `auth.tsx`, on passe `emailRedirectTo: window.location.origin`. Le lien atterrit sur `/`, qui ne traite ni le `?code=...` (PKCE) ni le hash `#access_token=...`. Sur Gmail mobile le lien s'ouvre souvent dans une webview in-app qui ne partage pas le `localStorage` → la session n'est jamais persistée.
+Le lien est pré-créé en `useEffect` au montage (état `creating → ready`). Pendant ~300ms les boutons sont désactivés avec spinner discret. URL toujours visible en bas, copiable.
 
-**Correctif :**
-- Créer une route **publique** `src/routes/auth.callback.tsx` qui :
-  - Tente `supabase.auth.exchangeCodeForSession(window.location.href)` (PKCE) ; fallback lecture du hash + `setSession()` si format implicite
-  - Affiche « Confirmation en cours… » puis redirige vers `/events` une fois la session établie
-  - En cas d'erreur (lien expiré/déjà utilisé), affiche un message clair + bouton « Renvoyer un e-mail »
-- Mettre à jour `signUp(...)` dans `auth.tsx` pour utiliser `emailRedirectTo: ${window.location.origin}/auth/callback`
-- Ajouter un bouton **« Renvoyer l'e-mail de confirmation »** sur `/auth` (`supabase.auth.resend({ type: 'signup', email })`) pour débloquer l'utilisateur Gmail déjà coincé
-- Whitelister `https://good-time-frame.lovable.app/auth/callback` (+ URL preview) côté backend
+Idem pour invitation réseau (scope=network), même UI.
 
-⚠️ Je ne peux pas forcer Gmail à ouvrir le lien dans le navigateur système, mais le callback dédié + le bouton « Renvoyer » couvrent le cas.
+## 2. « Continuer avec un pseudo » (sans email)
 
-## 3. Accès aux données utilisateurs & aux bugs
+Sur `/auth`, ajouter une 3e option en plus de Sign in / Sign up :
 
-3 options, dis-moi laquelle (ou lesquelles) tu veux :
+```
+[ Continuer avec un pseudo ]   ← bouton secondaire mis en avant
+```
 
-**a) Backend viewer (déjà dispo, zéro setup)** — bouton « View Backend » dans Lovable : voir users, événements, photos, invitations, logs auth, logs DB. Le plus simple pour tes 6 amis en test.
+Flow :
+1. Champ unique « Votre prénom ou pseudo »
+2. Clic → `supabase.auth.signInAnonymously()` avec `options.data.display_name = pseudo`
+3. Le trigger `handle_new_user` existant remplit déjà `profiles.display_name`
+4. Redirige vers `redirect` (ou `/events`)
 
-**b) Amplitude (analytics produit)** — j'intègre `@amplitude/analytics-browser` et je track les events clés : `signup`, `event_created`, `photos_uploaded`, `invite_sent`, `invite_redeemed`, `photo_downloaded`. Il me faut **ta clé API Amplitude** (Project Settings → API Keys), je la stockerai en `VITE_AMPLITUDE_API_KEY`. L'init sera conditionnée au consentement cookies (RGPD) via ton `CookieBanner`.
+Activation backend : `external_anonymous_users_enabled: true` via `supabase--configure_auth`.
 
-**c) Sentry (bugs runtime)** — plus adapté qu'Amplitude pour traquer erreurs JS, stack traces et erreurs réseau. Recommandé en parallèle d'Amplitude.
+Sur le profil, ajouter un bandeau « Sauvegarder mon compte » qui propose de lier un email + mot de passe (`supabase.auth.updateUser({ email, password })`) pour ne pas perdre l'accès. Pas bloquant.
 
-→ **Question** : tu veux (a) seulement, (a+b), (a+c), ou les trois ? Si (b), envoie-moi la clé Amplitude.
+Note GDPR : ajouter ligne dans `/privacy` expliquant le mode invité (données liées à un identifiant anonyme, perdues si effacement du navigateur).
+
+## 3. Session 30 jours
+
+Le JWT access token reste court (1h, non modifiable côté client), mais le **refresh token** peut durer 30 jours. Configuration via `supabase--configure_auth` n'expose pas directement ça → il faut ajuster via le service auth. Plan :
+- Activer `autoRefreshToken: true` (déjà fait dans `client.ts`)
+- Demander d'étendre `jwt_exp` côté projet n'est pas exposé sur Lovable Cloud ; le refresh token par défaut est déjà long (~30j inactivité + 60j absolue chez Supabase). Vérifier `supabase/config.toml` et étendre `[auth] jwt_expiry` si possible (sinon documenter la limite).
+- Ajouter un `visibilitychange` listener qui appelle `supabase.auth.refreshSession()` au retour sur l'app pour éviter toute expiration ressentie.
+
+## 4. Alléger la home (`src/routes/index.tsx`)
+
+- Réduire le hero : titre court + 1 sous-titre court (au lieu du paragraphe actuel)
+- Supprimer / fusionner les sections secondaires redondantes
+- Garder : tagline, 1 CTA principal « Commencer », 1 lien discret « J'ai déjà un compte »
+- Optionnel : 3 mini-features en 1 ligne d'icônes (au lieu de blocs textuels)
 
 ## Détails techniques
 
-- queryKey carte : `["events-map"]` dans `_authenticated.map.tsx`
-- Nouveau fichier : `src/routes/auth.callback.tsx` (route publique, hors `_authenticated/`)
-- Module Amplitude : `src/lib/amplitude.ts` chargé après consentement cookies
+| Fichier | Action |
+|---|---|
+| `src/components/InviteShareSheet.tsx` | Refonte UI : grille 6 boutons, auto-création du lien au mount |
+| `src/routes/auth.tsx` | Ajouter bouton « Continuer avec un pseudo » + petit form pseudo |
+| `src/routes/_authenticated.profile.tsx` | Bandeau « Sauvegarder mon compte » si `user.is_anonymous` |
+| `src/routes/index.tsx` | Réduire le contenu textuel |
+| `src/routes/privacy.tsx` | Paragraphe mode invité |
+| Backend | `configure_auth` → `external_anonymous_users_enabled: true` |
+| `src/routes/__root.tsx` ou provider | Listener `visibilitychange` → `refreshSession()` |
+
+## Points de confirmation
+
+- OK pour activer **l'auth anonyme Supabase** (un compte est techniquement créé mais sans email/mdp) ?
+- Sur la home, je peux te montrer 2 versions (très épurée vs modérée) ou je tranche direct ?

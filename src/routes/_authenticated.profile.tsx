@@ -113,12 +113,38 @@ function ProfilePage() {
     }
   }
 
+  const isAnonymous = !!(user as any)?.is_anonymous;
+  const [upgrading, setUpgrading] = useState(false);
+
+  async function upgradeAccount(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email") || "").trim();
+    const password = String(fd.get("password") || "");
+    if (!email || password.length < 8) {
+      toast.error("E-mail valide et mot de passe d'au moins 8 caractères requis");
+      return;
+    }
+    setUpgrading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ email, password });
+      if (error) throw error;
+      toast.success("Compte sauvegardé. Vérifiez votre e-mail pour confirmer.");
+    } catch (err: any) {
+      toast.error(err?.message || "Impossible de sauvegarder le compte");
+    } finally {
+      setUpgrading(false);
+    }
+  }
+
   return (
     <AppShell title="Profil">
       <div className="space-y-6">
         <section className="rounded-2xl border border-border bg-card p-4">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Connecté en tant que</p>
-          <p className="mt-1 text-sm">{user?.email}</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">
+            {isAnonymous ? "Connecté en tant qu'invité" : "Connecté en tant que"}
+          </p>
+          <p className="mt-1 text-sm">{user?.email ?? "Compte invité (pas d'e-mail)"}</p>
           <div className="mt-3">
             {!editing ? (
               <div className="flex items-center justify-between">
@@ -146,6 +172,38 @@ function ProfilePage() {
             )}
           </div>
         </section>
+
+        {isAnonymous && (
+          <section className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+            <p className="font-display text-lg">Sauvegardez votre compte</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Ajoutez un e-mail et un mot de passe pour ne pas perdre vos événements si vous changez d'appareil.
+            </p>
+            <form onSubmit={upgradeAccount} className="mt-3 space-y-2">
+              <input
+                name="email"
+                type="email"
+                required
+                placeholder="vous@exemple.com"
+                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+              />
+              <input
+                name="password"
+                type="password"
+                required
+                minLength={8}
+                placeholder="Mot de passe (8 caractères min.)"
+                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+              />
+              <button
+                disabled={upgrading}
+                className="w-full rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
+              >
+                {upgrading ? "Enregistrement…" : "Sauvegarder mon compte"}
+              </button>
+            </form>
+          </section>
+        )}
 
         <section className="space-y-2">
           <button

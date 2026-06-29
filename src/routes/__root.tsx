@@ -111,11 +111,36 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function SessionKeeper() {
+  useEffect(() => {
+    let mounted = true;
+    const refresh = async () => {
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data } = await supabase.auth.getSession();
+        if (mounted && data.session) await supabase.auth.refreshSession();
+      } catch {}
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", refresh);
+    return () => {
+      mounted = false;
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", refresh);
+    };
+  }, []);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <SessionKeeper />
         <Outlet />
         <Toaster position="top-center" />
         <CookieBanner />
