@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
 import { Plus, Camera, Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function PhotoUploader({
   eventId,
