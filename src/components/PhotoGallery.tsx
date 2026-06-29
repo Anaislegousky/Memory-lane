@@ -165,6 +165,7 @@ export function PhotoGallery({
     toast.success("Supprimées");
     setConfirmDelete(false);
     exitSelect();
+    queryClient.invalidateQueries({ queryKey: ["events-map"] });
     onChange();
   }
 
