@@ -58,6 +58,7 @@ export function PhotoUploader({
     if (cameraRef.current) cameraRef.current.value = "";
     if (ok > 0) {
       toast.success(`${ok} photo${ok > 1 ? "s" : ""} ajoutée${ok > 1 ? "s" : ""}`);
+      queryClient.invalidateQueries({ queryKey: ["events-map"] });
       onUploaded();
     }
   }
