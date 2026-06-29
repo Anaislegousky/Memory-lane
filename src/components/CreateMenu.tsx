@@ -190,50 +190,19 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
         {phase === "preview" && (
           <div className="max-h-[70vh] space-y-3 overflow-y-auto">
             {groups.map((g) => (
-              <div key={g.id} className="space-y-2 rounded-2xl border border-border bg-background p-3">
+              <div key={g.id} className="space-y-3 rounded-2xl border border-border bg-background p-3">
                 <input
                   value={g.name}
                   onChange={(e) => updateGroup(g.id, { name: e.target.value })}
                   className="w-full rounded-lg border border-input bg-card px-3 py-2 font-display text-lg"
                 />
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <label className="inline-flex items-center gap-1 rounded-full border border-input bg-card px-2 py-1">
-                    <Calendar className="h-3 w-3" />
-                    <input
-                      type="date"
-                      value={g.event_date}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        const patch: Partial<EventGroup> = { event_date: v };
-                        if (g.end_date && g.end_date < v) patch.end_date = v;
-                        updateGroup(g.id, patch);
-                      }}
-                      className="bg-transparent outline-none"
-                    />
-                  </label>
-                  <label className="inline-flex items-center gap-1 rounded-full border border-input bg-card px-2 py-1">
-                    <span className="text-muted-foreground">→</span>
-                    <input
-                      type="date"
-                      value={g.end_date ?? g.event_date}
-                      min={g.event_date}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        updateGroup(g.id, { end_date: v === g.event_date ? null : v });
-                      }}
-                      className="bg-transparent outline-none"
-                    />
-                  </label>
-                  <label className="inline-flex flex-1 items-center gap-1 rounded-full border border-input bg-card px-2 py-1">
-                    <MapPin className="h-3 w-3" />
-                    <input
-                      placeholder="Lieu (optionnel)"
-                      value={shortAddress(g.location_label)}
-                      onChange={(e) => updateGroup(g.id, { location_label: e.target.value })}
-                      className="w-full bg-transparent outline-none"
-                    />
-                  </label>
-                </div>
+
+                {/* Date card — same shape as /events/new */}
+                <DateCard group={g} onChange={(patch) => updateGroup(g.id, patch)} />
+
+                {/* Location card — same shape as /events/new */}
+                <LocationCard group={g} onChange={(patch) => updateGroup(g.id, patch)} />
+
                 <div className="flex gap-1.5 overflow-x-auto">
                   {g.photos.slice(0, 8).map((p, i) => (
                     <PhotoThumb key={i} file={p.file} />
