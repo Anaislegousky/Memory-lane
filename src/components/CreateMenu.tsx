@@ -3,9 +3,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import imageCompression from "browser-image-compression";
-import { ImagePlus, Camera, CalendarPlus, X, Loader2, MapPin, Calendar } from "lucide-react";
+import { ImagePlus, Camera, CalendarPlus, X, Loader2, MapPin, Locate, Search } from "lucide-react";
 import { toast } from "sonner";
-import { createEvent } from "@/lib/events.functions";
+import { createEvent, geocodeSearch, geocodeReverse } from "@/lib/events.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import {
@@ -13,7 +13,6 @@ import {
   groupPhotosIntoEvents,
   type EventGroup,
 } from "@/lib/exif-import";
-import { shortAddress } from "@/lib/format-address";
 
 type Phase = "menu" | "reading" | "preview" | "uploading";
 
