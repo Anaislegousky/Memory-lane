@@ -124,6 +124,23 @@ function AuthPage() {
         >
           {mode === "signup" ? "J'ai déjà un compte" : "Créer un nouveau compte"}
         </button>
+
+        <button
+          onClick={async () => {
+            const email = (document.querySelector<HTMLInputElement>('input[name="email"]')?.value || "").trim();
+            if (!email) return toast.error("Saisissez votre e-mail d'abord");
+            const { error } = await supabase.auth.resend({
+              type: "signup",
+              email,
+              options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+            });
+            if (error) toast.error(error.message);
+            else toast.success("E-mail de confirmation renvoyé");
+          }}
+          className="mt-3 w-full text-center text-xs text-muted-foreground underline"
+        >
+          Renvoyer l'e-mail de confirmation
+        </button>
       </div>
     </div>
   );
