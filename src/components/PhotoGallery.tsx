@@ -362,6 +362,7 @@ function Lightbox({
   const [showTags, setShowTags] = useState(false);
   const tagged = new Set(tags.map((t) => t.tagged_user_id));
   const namesById = new Map(members.map((m) => [m.user_id, m.display_name]));
+  const queryClient = useQueryClient();
 
   const prev = useCallback(() => onIndex((index - 1 + photos.length) % photos.length), [index, photos.length, onIndex]);
   const next = useCallback(() => onIndex((index + 1) % photos.length), [index, photos.length, onIndex]);
