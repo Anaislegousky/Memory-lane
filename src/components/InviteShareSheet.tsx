@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
-import { Copy, Mail, MessageCircle, Send, Share2, X, Loader2, MessageSquare } from "lucide-react";
+import { Copy, Mail, MessageCircle, Send, Share2, X, Loader2 } from "lucide-react";
 
 function randomToken() {
   const a = new Uint8Array(16);
@@ -61,10 +61,6 @@ export function InviteShareSheet({
     toast.success("Lien copié");
   }
 
-  function openExternal(url: string) {
-    window.open(url, "_blank", "noopener");
-  }
-
   async function nativeShare() {
     if (!link) return;
     if (navigator.share) {
@@ -79,7 +75,21 @@ export function InviteShareSheet({
   const ready = !!link;
   const canNativeShare = typeof navigator !== "undefined" && !!(navigator as any).share;
 
-  const actions = [
+  const emailSubject = scope === "event" && eventName
+    ? `Photos « ${eventName} »`
+    : "Rejoins-moi sur Memories";
+
+  type ShareAction = {
+    key: string;
+    label: string;
+    icon: React.ReactNode;
+    bg: string;
+    href?: string;
+    target?: string;
+    onClick?: () => void;
+  };
+
+  const actions: ShareAction[] = [
     {
       key: "copy",
       label: "Copier",
@@ -92,45 +102,34 @@ export function InviteShareSheet({
       label: "WhatsApp",
       icon: <MessageCircle className="h-6 w-6" />,
       bg: "bg-[#25D366] text-white",
-      onClick: () => openExternal(`https://wa.me/?text=${encodeURIComponent(fullText)}`),
+      href: link ? `https://wa.me/?text=${encodeURIComponent(fullText)}` : "#",
+      target: "_blank",
     },
     {
       key: "telegram",
       label: "Telegram",
       icon: <Send className="h-6 w-6" />,
       bg: "bg-[#229ED9] text-white",
-      onClick: () =>
-        openExternal(
-          `https://t.me/share/url?url=${encodeURIComponent(link!)}&text=${encodeURIComponent(message)}`,
-        ),
-    },
-    {
-      key: "messenger",
-      label: "Messenger",
-      icon: <MessageSquare className="h-6 w-6" />,
-      bg: "bg-[#0084FF] text-white",
-      onClick: () =>
-        openExternal(`https://www.facebook.com/dialog/send?link=${encodeURIComponent(link!)}&app_id=140586622674265&redirect_uri=${encodeURIComponent(link!)}`),
+      href: link
+        ? `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(message)}`
+        : "#",
+      target: "_blank",
     },
     {
       key: "sms",
       label: "SMS",
-      icon: <MessageSquare className="h-6 w-6" />,
+      icon: <MessageCircle className="h-6 w-6" />,
       bg: "bg-emerald-500 text-white",
-      onClick: () => {
-        window.location.href = `sms:?&body=${encodeURIComponent(fullText)}`;
-      },
+      href: link ? `sms:?&body=${encodeURIComponent(fullText)}` : "#",
     },
     {
       key: "email",
       label: "E-mail",
       icon: <Mail className="h-6 w-6" />,
       bg: "bg-amber-500 text-white",
-      onClick: () => {
-        window.location.href = `mailto:?subject=${encodeURIComponent(
-          scope === "event" && eventName ? `Photos « ${eventName} »` : "Rejoins-moi sur Memories",
-        )}&body=${encodeURIComponent(fullText)}`;
-      },
+      href: link
+        ? `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(fullText)}`
+        : "#",
     },
     ...(canNativeShare
       ? [
@@ -140,7 +139,7 @@ export function InviteShareSheet({
             icon: <Share2 className="h-6 w-6" />,
             bg: "bg-primary text-primary-foreground",
             onClick: nativeShare,
-          },
+          } as ShareAction,
         ]
       : []),
   ];
@@ -171,21 +170,44 @@ export function InviteShareSheet({
 
         {/* Actions grid */}
         <div className="mt-5 grid grid-cols-4 gap-3 sm:grid-cols-5">
-          {actions.map((a) => (
-            <button
-              key={a.key}
-              onClick={a.onClick}
-              disabled={!ready}
-              className="flex flex-col items-center gap-1.5 disabled:opacity-50"
-            >
-              <span
-                className={`relative flex h-14 w-14 items-center justify-center rounded-full ${a.bg} shadow-sm transition active:scale-95`}
+          {actions.map((a) => {
+            const content = (
+              <>
+                <span
+                  className={`relative flex h-14 w-14 items-center justify-center rounded-full ${a.bg} shadow-sm transition active:scale-95`}
+                >
+                  {ready ? a.icon : <Loader2 className="h-5 w-5 animate-spin" />}
+                </span>
+                <span className="text-[11px] text-muted-foreground">{a.label}</span>
+              </>
+            );
+            const cls = `flex flex-col items-center gap-1.5 ${ready ? "" : "pointer-events-none opacity-50"}`;
+            if (a.href) {
+              return (
+                <a
+                  key={a.key}
+                  href={a.href}
+                  target={a.target}
+                  rel={a.target === "_blank" ? "noopener noreferrer" : undefined}
+                  aria-disabled={!ready}
+                  className={cls}
+                >
+                  {content}
+                </a>
+              );
+            }
+            return (
+              <button
+                key={a.key}
+                type="button"
+                onClick={a.onClick}
+                disabled={!ready}
+                className={cls}
               >
-                {ready ? a.icon : <Loader2 className="h-5 w-5 animate-spin" />}
-              </span>
-              <span className="text-[11px] text-muted-foreground">{a.label}</span>
-            </button>
-          ))}
+                {content}
+              </button>
+            );
+          })}
         </div>
 
         {/* Link preview */}
