@@ -418,6 +418,7 @@ function Lightbox({
     const { error } = await supabase.from("photos").delete().eq("id", photo.id);
     if (error) return toast.error(error.message);
     toast.success("Supprimée");
+    queryClient.invalidateQueries({ queryKey: ["events-map"] });
     onClose();
     onChange();
   }
