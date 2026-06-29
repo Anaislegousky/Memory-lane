@@ -90,6 +90,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
+    scripts: [
+      {
+        src: "https://cdn.amplitude.com/script/b4d90f23bde8f02a3a37ea9c2f558431.js",
+        async: true,
+      },
+      {
+        children: `window.amplitude && window.amplitude.add(window.sessionReplay.plugin({sampleRate:1})); window.amplitude && window.amplitude.init('b4d90f23bde8f02a3a37ea9c2f558431', {autocapture:{pageViews:true,sessions:true,elementInteractions:true}});`,
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
