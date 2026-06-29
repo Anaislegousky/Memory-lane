@@ -6,7 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
 
 const searchSchema = z.object({
-  mode: z.enum(["signin", "signup"]).optional(),
+  mode: z.enum(["signin", "signup", "guest"]).optional(),
   redirect: z.string().optional(),
 });
 
@@ -25,6 +25,9 @@ const signinSchema = z.object({
   email: z.string().trim().email("E-mail invalide"),
   password: z.string().min(1),
 });
+const guestSchema = z.object({
+  display_name: z.string().trim().min(2, "Au moins 2 caractères").max(60),
+});
 
 function getSafeRedirect(redirect: string | undefined) {
   if (!redirect || !redirect.startsWith("/") || redirect.startsWith("/auth")) return "/events";
@@ -35,7 +38,7 @@ function AuthPage() {
   const search = useSearch({ from: "/auth" });
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup">(search.mode ?? "signup");
+  const [mode, setMode] = useState<"signin" | "signup" | "guest">(search.mode ?? "guest");
   const [busy, setBusy] = useState(false);
   const redirectTo = getSafeRedirect(search.redirect);
 
@@ -48,7 +51,18 @@ function AuthPage() {
     const fd = new FormData(e.currentTarget);
     setBusy(true);
     try {
-      if (mode === "signup") {
+      if (mode === "guest") {
+        const v = guestSchema.parse({ display_name: fd.get("display_name") });
+        const { data, error } = await supabase.auth.signInAnonymously({
+          options: { data: { display_name: v.display_name } },
+        });
+        if (error) throw error;
+        if (data.user) {
+          await supabase.from("profiles").upsert({ id: data.user.id, display_name: v.display_name });
+        }
+        toast.success(`Bienvenue ${v.display_name} !`);
+        navigate({ to: redirectTo, replace: true });
+      } else if (mode === "signup") {
         const v = signupSchema.parse({
           display_name: fd.get("display_name"),
           email: fd.get("email"),
@@ -85,62 +99,103 @@ function AuthPage() {
     }
   }
 
+  const title =
+    mode === "guest" ? "Continuer en invité" : mode === "signup" ? "Créer votre compte" : "Bon retour";
+  const subtitle =
+    mode === "guest"
+      ? "Aucun e-mail requis. Choisissez un prénom et c'est parti."
+      : mode === "signup"
+        ? "Nous avons juste besoin d'un e-mail et d'un nom que vos amis reconnaîtront."
+        : "Connectez-vous pour retrouver vos événements et vos photos.";
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-md px-6 py-10">
         <Link to="/" className="text-sm text-muted-foreground">← Retour</Link>
-        <h1 className="mt-4 font-display text-4xl">
-          {mode === "signup" ? "Créer votre compte" : "Bon retour"}
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {mode === "signup"
-            ? "Nous avons juste besoin d'un e-mail et d'un nom que vos amis reconnaîtront."
-            : "Connectez-vous pour retrouver vos événements et vos photos."}
-        </p>
+        <h1 className="mt-4 font-display text-4xl">{title}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
-          {mode === "signup" && (
-            <Field name="display_name" label="Nom d'affichage" placeholder="Alex" autoComplete="nickname" />
+          {(mode === "signup" || mode === "guest") && (
+            <Field
+              name="display_name"
+              label={mode === "guest" ? "Votre prénom ou pseudo" : "Nom d'affichage"}
+              placeholder="Alex"
+              autoComplete="nickname"
+            />
           )}
-          <Field name="email" type="email" label="E-mail" placeholder="vous@exemple.com" autoComplete="email" />
-          <Field
-            name="password"
-            type="password"
-            label="Mot de passe"
-            placeholder={mode === "signup" ? "Au moins 8 caractères" : "Votre mot de passe"}
-            autoComplete={mode === "signup" ? "new-password" : "current-password"}
-          />
+          {mode !== "guest" && (
+            <>
+              <Field name="email" type="email" label="E-mail" placeholder="vous@exemple.com" autoComplete="email" />
+              <Field
+                name="password"
+                type="password"
+                label="Mot de passe"
+                placeholder={mode === "signup" ? "Au moins 8 caractères" : "Votre mot de passe"}
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              />
+            </>
+          )}
           <button
             disabled={busy}
             className="w-full rounded-full bg-primary px-5 py-3.5 text-base font-medium text-primary-foreground disabled:opacity-60"
           >
-            {busy ? "Veuillez patienter…" : mode === "signup" ? "Créer le compte" : "Se connecter"}
+            {busy
+              ? "Veuillez patienter…"
+              : mode === "guest"
+                ? "Continuer"
+                : mode === "signup"
+                  ? "Créer le compte"
+                  : "Se connecter"}
           </button>
         </form>
 
-        <button
-          onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
-          className="mt-6 w-full text-center text-sm text-muted-foreground underline"
-        >
-          {mode === "signup" ? "J'ai déjà un compte" : "Créer un nouveau compte"}
-        </button>
+        {/* Mode switcher */}
+        <div className="mt-6 space-y-2 text-center text-sm">
+          {mode !== "guest" && (
+            <button
+              onClick={() => setMode("guest")}
+              className="block w-full text-muted-foreground underline"
+            >
+              Continuer sans e-mail (invité)
+            </button>
+          )}
+          {mode !== "signin" && (
+            <button
+              onClick={() => setMode("signin")}
+              className="block w-full text-muted-foreground underline"
+            >
+              J'ai déjà un compte
+            </button>
+          )}
+          {mode !== "signup" && (
+            <button
+              onClick={() => setMode("signup")}
+              className="block w-full text-muted-foreground underline"
+            >
+              Créer un compte avec e-mail
+            </button>
+          )}
+        </div>
 
-        <button
-          onClick={async () => {
-            const email = (document.querySelector<HTMLInputElement>('input[name="email"]')?.value || "").trim();
-            if (!email) return toast.error("Saisissez votre e-mail d'abord");
-            const { error } = await supabase.auth.resend({
-              type: "signup",
-              email,
-              options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-            });
-            if (error) toast.error(error.message);
-            else toast.success("E-mail de confirmation renvoyé");
-          }}
-          className="mt-3 w-full text-center text-xs text-muted-foreground underline"
-        >
-          Renvoyer l'e-mail de confirmation
-        </button>
+        {mode === "signin" && (
+          <button
+            onClick={async () => {
+              const email = (document.querySelector<HTMLInputElement>('input[name="email"]')?.value || "").trim();
+              if (!email) return toast.error("Saisissez votre e-mail d'abord");
+              const { error } = await supabase.auth.resend({
+                type: "signup",
+                email,
+                options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+              });
+              if (error) toast.error(error.message);
+              else toast.success("E-mail de confirmation renvoyé");
+            }}
+            className="mt-3 w-full text-center text-xs text-muted-foreground underline"
+          >
+            Renvoyer l'e-mail de confirmation
+          </button>
+        )}
       </div>
     </div>
   );

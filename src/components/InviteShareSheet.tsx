@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
-import { Copy, Share2, X } from "lucide-react";
+import { Copy, Mail, MessageCircle, Send, Share2, X, Loader2, MessageSquare } from "lucide-react";
 
 function randomToken() {
   const a = new Uint8Array(16);
@@ -13,37 +13,47 @@ function randomToken() {
 export function InviteShareSheet({
   scope,
   eventId,
+  eventName,
   onClose,
 }: {
   scope: "network" | "event";
   eventId?: string;
+  eventName?: string;
   onClose: () => void;
 }) {
   const { user } = useAuth();
   const [link, setLink] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function create() {
+  // Auto-create the invite link on mount
+  useEffect(() => {
     if (!user) return;
-    setBusy(true);
-    try {
-      const token = randomToken();
-      const { error } = await supabase.from("invites").insert({
-        token,
-        inviter_id: user.id,
-        scope,
-        event_id: scope === "event" ? eventId : null,
-        expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
-      });
-      if (error) throw error;
-      const url = `${window.location.origin}/join/${token}`;
-      setLink(url);
-    } catch (err: any) {
-      toast.error(err?.message || "Impossible de créer l'invitation");
-    } finally {
-      setBusy(false);
-    }
-  }
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = randomToken();
+        const { error } = await supabase.from("invites").insert({
+          token,
+          inviter_id: user.id,
+          scope,
+          event_id: scope === "event" ? eventId : null,
+          expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
+        });
+        if (error) throw error;
+        if (!cancelled) setLink(`${window.location.origin}/join/${token}`);
+      } catch (err: any) {
+        if (!cancelled) setError(err?.message || "Impossible de créer l'invitation");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, scope, eventId]);
+
+  const message = scope === "event" && eventName
+    ? `Rejoins-moi sur Memories pour partager les photos de « ${eventName} » :`
+    : `Rejoins-moi sur Memories pour partager nos souvenirs :`;
+  const fullText = link ? `${message} ${link}` : "";
 
   async function copy() {
     if (!link) return;
@@ -51,53 +61,149 @@ export function InviteShareSheet({
     toast.success("Lien copié");
   }
 
-  async function share() {
+  function openExternal(url: string) {
+    window.open(url, "_blank", "noopener");
+  }
+
+  async function nativeShare() {
     if (!link) return;
     if (navigator.share) {
-      try { await navigator.share({ url: link, title: "Rejoignez-moi sur Memories" }); } catch {}
+      try {
+        await navigator.share({ url: link, text: message, title: "Memories" });
+      } catch {}
     } else {
       copy();
     }
   }
 
+  const ready = !!link;
+  const canNativeShare = typeof navigator !== "undefined" && !!(navigator as any).share;
+
+  const actions = [
+    {
+      key: "copy",
+      label: "Copier",
+      icon: <Copy className="h-6 w-6" />,
+      bg: "bg-muted text-foreground",
+      onClick: copy,
+    },
+    {
+      key: "whatsapp",
+      label: "WhatsApp",
+      icon: <MessageCircle className="h-6 w-6" />,
+      bg: "bg-[#25D366] text-white",
+      onClick: () => openExternal(`https://wa.me/?text=${encodeURIComponent(fullText)}`),
+    },
+    {
+      key: "telegram",
+      label: "Telegram",
+      icon: <Send className="h-6 w-6" />,
+      bg: "bg-[#229ED9] text-white",
+      onClick: () =>
+        openExternal(
+          `https://t.me/share/url?url=${encodeURIComponent(link!)}&text=${encodeURIComponent(message)}`,
+        ),
+    },
+    {
+      key: "messenger",
+      label: "Messenger",
+      icon: <MessageSquare className="h-6 w-6" />,
+      bg: "bg-[#0084FF] text-white",
+      onClick: () =>
+        openExternal(`https://www.facebook.com/dialog/send?link=${encodeURIComponent(link!)}&app_id=140586622674265&redirect_uri=${encodeURIComponent(link!)}`),
+    },
+    {
+      key: "sms",
+      label: "SMS",
+      icon: <MessageSquare className="h-6 w-6" />,
+      bg: "bg-emerald-500 text-white",
+      onClick: () => {
+        window.location.href = `sms:?&body=${encodeURIComponent(fullText)}`;
+      },
+    },
+    {
+      key: "email",
+      label: "E-mail",
+      icon: <Mail className="h-6 w-6" />,
+      bg: "bg-amber-500 text-white",
+      onClick: () => {
+        window.location.href = `mailto:?subject=${encodeURIComponent(
+          scope === "event" && eventName ? `Photos « ${eventName} »` : "Rejoins-moi sur Memories",
+        )}&body=${encodeURIComponent(fullText)}`;
+      },
+    },
+    ...(canNativeShare
+      ? [
+          {
+            key: "share",
+            label: "Partager…",
+            icon: <Share2 className="h-6 w-6" />,
+            bg: "bg-primary text-primary-foreground",
+            onClick: nativeShare,
+          },
+        ]
+      : []),
+  ];
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center" onClick={onClose}>
-      <div className="w-full max-w-md rounded-t-3xl bg-card p-5 sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
-        <div className="mb-3 flex items-center justify-between">
+      <div
+        className="w-full max-w-md rounded-t-3xl bg-card p-5 pb-6 sm:rounded-3xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-1 flex items-center justify-between">
           <h3 className="font-display text-xl">
             {scope === "event" ? "Inviter à cet événement" : "Inviter un ami"}
           </h3>
-          <button onClick={onClose} aria-label="Fermer"><X className="h-5 w-5" /></button>
+          <button
+            onClick={onClose}
+            aria-label="Fermer"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
         <p className="text-sm text-muted-foreground">
           {scope === "event"
-            ? "Toute personne avec ce lien pourra rejoindre l'événement et voir les photos."
-            : "Envoyez ce lien pour ajouter quelqu'un à votre cercle. Cette personne verra les événements auxquels vous l'invitez."}
+            ? "Partagez ce lien pour inviter quelqu'un à voir et ajouter des photos."
+            : "Partagez ce lien pour ajouter quelqu'un à votre cercle."}
         </p>
-        {!link ? (
-          <button
-            onClick={create}
-            disabled={busy}
-            className="mt-5 w-full rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground disabled:opacity-60"
-          >
-            {busy ? "Création du lien…" : "Créer le lien d'invitation"}
-          </button>
-        ) : (
-          <>
-            <div className="mt-4 rounded-xl border border-border bg-background px-3 py-2 text-xs break-all">
-              {link}
-            </div>
-            <div className="mt-3 flex gap-2">
-              <button onClick={copy} className="flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm">
-                <Copy className="h-4 w-4" /> Copier
-              </button>
-              <button onClick={share} className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm text-primary-foreground">
-                <Share2 className="h-4 w-4" /> Partager
-              </button>
-            </div>
-            <p className="mt-3 text-center text-xs text-muted-foreground">Le lien expire dans 30 jours.</p>
-          </>
-        )}
+
+        {/* Actions grid */}
+        <div className="mt-5 grid grid-cols-4 gap-3 sm:grid-cols-5">
+          {actions.map((a) => (
+            <button
+              key={a.key}
+              onClick={a.onClick}
+              disabled={!ready}
+              className="flex flex-col items-center gap-1.5 disabled:opacity-50"
+            >
+              <span
+                className={`relative flex h-14 w-14 items-center justify-center rounded-full ${a.bg} shadow-sm transition active:scale-95`}
+              >
+                {ready ? a.icon : <Loader2 className="h-5 w-5 animate-spin" />}
+              </span>
+              <span className="text-[11px] text-muted-foreground">{a.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Link preview */}
+        <div className="mt-5 flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
+          <span className="flex-1 truncate text-xs text-muted-foreground">
+            {link ?? (error ? error : "Génération du lien…")}
+          </span>
+          {link && (
+            <button
+              onClick={copy}
+              className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
+            >
+              Copier
+            </button>
+          )}
+        </div>
+
+        <p className="mt-3 text-center text-[11px] text-muted-foreground">Le lien expire dans 30 jours.</p>
       </div>
     </div>
   );
