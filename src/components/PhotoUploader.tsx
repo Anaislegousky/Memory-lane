@@ -6,6 +6,9 @@ import { toast } from "sonner";
 import { Plus, Camera, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
+const hiddenInputStyle =
+  "absolute h-px w-px overflow-hidden border-0 p-0 opacity-0 pointer-events-none";
+
 export function PhotoUploader({
   eventId,
   onUploaded,
@@ -66,6 +69,7 @@ export function PhotoUploader({
   return (
     <>
       <button
+        type="button"
         onClick={() => galleryRef.current?.click()}
         disabled={busy}
         aria-label="Ajouter des photos"
@@ -75,6 +79,7 @@ export function PhotoUploader({
         {busy ? "Envoi…" : "Ajouter"}
       </button>
       <button
+        type="button"
         onClick={() => cameraRef.current?.click()}
         disabled={busy}
         aria-label="Prendre une photo"
@@ -89,7 +94,9 @@ export function PhotoUploader({
         accept="image/*"
         multiple
         onChange={onChange}
-        className="hidden"
+        className={hiddenInputStyle}
+        tabIndex={-1}
+        aria-hidden="true"
       />
       <input
         ref={cameraRef}
@@ -97,7 +104,9 @@ export function PhotoUploader({
         accept="image/*"
         capture="environment"
         onChange={onChange}
-        className="hidden"
+        className={hiddenInputStyle}
+        tabIndex={-1}
+        aria-hidden="true"
       />
     </>
   );

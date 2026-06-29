@@ -73,7 +73,7 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
           data: {
             name: g.name.trim() || "Souvenirs",
             event_date: g.event_date,
-            end_date: null,
+            end_date: g.end_date,
             location_label: g.location_label || null,
             lat: g.lat,
             lng: g.lng,
@@ -115,7 +115,7 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
         `${groups.length} événement${groups.length > 1 ? "s" : ""} créé${groups.length > 1 ? "s" : ""}`,
       );
       close();
-      if (groups.length === 1 && lastEventId) {
+      if (lastEventId) {
         navigate({ to: "/events/$id", params: { id: lastEventId } });
       }
     } catch (err: any) {
@@ -190,10 +190,6 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
 
         {phase === "preview" && (
           <div className="max-h-[70vh] space-y-3 overflow-y-auto">
-            <p className="text-xs text-muted-foreground">
-              {groups.length} événement{groups.length > 1 ? "s" : ""} détecté
-              {groups.length > 1 ? "s" : ""} d'après vos photos.
-            </p>
             {groups.map((g) => (
               <div key={g.id} className="space-y-2 rounded-2xl border border-border bg-background p-3">
                 <input
@@ -207,7 +203,25 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
                     <input
                       type="date"
                       value={g.event_date}
-                      onChange={(e) => updateGroup(g.id, { event_date: e.target.value })}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        const patch: Partial<EventGroup> = { event_date: v };
+                        if (g.end_date && g.end_date < v) patch.end_date = v;
+                        updateGroup(g.id, patch);
+                      }}
+                      className="bg-transparent outline-none"
+                    />
+                  </label>
+                  <label className="inline-flex items-center gap-1 rounded-full border border-input bg-card px-2 py-1">
+                    <span className="text-muted-foreground">→</span>
+                    <input
+                      type="date"
+                      value={g.end_date ?? g.event_date}
+                      min={g.event_date}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        updateGroup(g.id, { end_date: v === g.event_date ? null : v });
+                      }}
                       className="bg-transparent outline-none"
                     />
                   </label>
@@ -240,7 +254,7 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
               onClick={createAll}
               className="w-full rounded-full bg-primary px-5 py-3.5 font-medium text-primary-foreground"
             >
-              Créer {groups.length} événement{groups.length > 1 ? "s" : ""}
+              Créer l'événement
             </button>
           </div>
         )}
