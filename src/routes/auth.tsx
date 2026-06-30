@@ -38,7 +38,9 @@ function AuthPage() {
   const search = useSearch({ from: "/auth" });
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup" | "guest">(search.mode ?? "guest");
+  const [mode, setMode] = useState<"signin" | "signup" | "guest">(
+    search.mode === "guest" ? "signup" : (search.mode ?? "signup"),
+  );
   const [busy, setBusy] = useState(false);
   const redirectTo = getSafeRedirect(search.redirect);
 
@@ -152,14 +154,6 @@ function AuthPage() {
 
         {/* Mode switcher */}
         <div className="mt-6 space-y-2 text-center text-sm">
-          {mode !== "guest" && (
-            <button
-              onClick={() => setMode("guest")}
-              className="block w-full text-muted-foreground underline"
-            >
-              Continuer sans e-mail (invité)
-            </button>
-          )}
           {mode !== "signin" && (
             <button
               onClick={() => setMode("signin")}
