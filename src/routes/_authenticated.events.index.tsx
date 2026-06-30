@@ -6,10 +6,22 @@ import { AppShell } from "@/components/AppShell";
 import { CreateMenu } from "@/components/CreateMenu";
 import { GuestGate } from "@/components/GuestGate";
 import { Plus, MapPin, Calendar, AlertTriangle } from "lucide-react";
-import { format, formatDistanceToNowStrict } from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns"; // On garde seulement ce dont on a besoin
 import { fr } from "date-fns/locale";
 import { shortAddress } from "@/lib/format-address";
 import { useExpiringPhotos, useNotifyExpiring } from "@/lib/use-expiring-photos";
+
+// 👇 Ajouter cette fonction ici (après les imports)
+const formatDateInUserTimeZone = (dateString: string | null) => {
+  if (!dateString) return null;
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return new Date(dateString).toLocaleString("fr-FR", {
+    timeZone: userTimeZone,
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 export const Route = createFileRoute("/_authenticated/events/")({
   head: () => ({ meta: [{ title: "Vos événements — Memories" }] }),
@@ -88,7 +100,7 @@ function EventsPage() {
                   {e.event_date && (
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />
-                      {e.end_date && e.end_date !== e.event_date // (Suggestion vibe code)
+                      {e.end_date && e.end_date !== e.event_date
                         ? `${formatDateInUserTimeZone(e.event_date)} – ${formatDateInUserTimeZone(e.end_date)}`
                         : formatDateInUserTimeZone(e.event_date)}
                     </span>
