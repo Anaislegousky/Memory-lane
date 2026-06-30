@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { createEvent, geocodeSearch, geocodeReverse } from "@/lib/events.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import { useIsGuest, GuestUpgradeDialog } from "@/components/GuestGate";
 import {
   readPhotoMeta,
   groupPhotosIntoEvents,
@@ -19,6 +20,7 @@ type Phase = "menu" | "reading" | "preview" | "uploading";
 export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isGuest = useIsGuest();
   const qc = useQueryClient();
   const createEventFn = useServerFn(createEvent);
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -26,6 +28,15 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
   const [phase, setPhase] = useState<Phase>("menu");
   const [groups, setGroups] = useState<EventGroup[]>([]);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [gateOpen, setGateOpen] = useState(false);
+
+  function guard(fn: () => void) {
+    if (isGuest) {
+      setGateOpen(true);
+      return;
+    }
+    fn();
+  }
 
   function reset() {
     setPhase("menu");
@@ -123,9 +134,13 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
     }
   }
 
-  if (!open) return null;
+  if (!open) {
+    return <GuestUpgradeDialog action="create_event" open={gateOpen} onOpenChange={setGateOpen} />;
+  }
 
   return (
+    <>
+    <GuestUpgradeDialog action="create_event" open={gateOpen} onOpenChange={setGateOpen} />
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={close}>
       <div
         className="w-full max-w-md rounded-t-3xl bg-card p-5 pb-8 shadow-xl animate-in slide-in-from-bottom"
@@ -146,7 +161,7 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
         {phase === "menu" && (
           <div className="space-y-2">
             <button
-              onClick={() => galleryRef.current?.click()}
+              onClick={() => guard(() => galleryRef.current?.click())}
               className="flex w-full items-center gap-3 rounded-2xl bg-primary p-4 text-left text-primary-foreground"
             >
               <ImagePlus className="h-5 w-5" />
@@ -156,7 +171,7 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
               </div>
             </button>
             <button
-              onClick={() => cameraRef.current?.click()}
+              onClick={() => guard(() => cameraRef.current?.click())}
               className="flex w-full items-center gap-3 rounded-2xl border border-border bg-background p-4 text-left"
             >
               <Camera className="h-5 w-5" />
@@ -166,10 +181,12 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
               </div>
             </button>
             <button
-              onClick={() => {
-                close();
-                navigate({ to: "/events/new" });
-              }}
+              onClick={() =>
+                guard(() => {
+                  close();
+                  navigate({ to: "/events/new" });
+                })
+              }
               className="flex w-full items-center gap-3 rounded-2xl border border-border bg-background p-4 text-left"
             >
               <CalendarPlus className="h-5 w-5" />
@@ -260,6 +277,7 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
         />
       </div>
     </div>
+    </>
   );
 }
 

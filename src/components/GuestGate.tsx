@@ -92,7 +92,7 @@ export function GuestGate({
             <AlertDialogAction
               onClick={() => {
                 setOpen(false);
-                navigate({ to: "/auth", search: { mode: "signup" } });
+                navigate({ to: "/profile" });
               }}
             >
               Créer mon compte
@@ -130,7 +130,7 @@ export function GuestUpgradeDialog({
           <AlertDialogAction
             onClick={() => {
               onOpenChange(false);
-              navigate({ to: "/auth", search: { mode: "signup" } });
+              navigate({ to: "/profile" });
             }}
           >
             Créer mon compte

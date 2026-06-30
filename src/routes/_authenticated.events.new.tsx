@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createEvent, geocodeSearch, geocodeReverse } from "@/lib/events.functions";
 import { toast } from "sonner";
 import { MapPin, Locate, Search } from "lucide-react";
+import { useIsGuest, GuestUpgradeDialog } from "@/components/GuestGate";
 
 export const Route = createFileRoute("/_authenticated/events/new")({
   head: () => ({ meta: [{ title: "Nouvel événement — Memories" }] }),
@@ -28,6 +29,7 @@ const todayISO = () => {
 
 function NewEventPage() {
   const navigate = useNavigate();
+  const isGuest = useIsGuest();
   const createEventFn = useServerFn(createEvent);
   const searchFn = useServerFn(geocodeSearch);
   const reverseFn = useServerFn(geocodeReverse);
@@ -39,6 +41,18 @@ function NewEventPage() {
   const [multiDay, setMultiDay] = useState(false);
   const [startDate, setStartDate] = useState(todayISO());
   const [endDate, setEndDate] = useState(todayISO());
+
+  if (isGuest) {
+    return (
+      <GuestUpgradeDialog
+        action="create_event"
+        open={true}
+        onOpenChange={(v) => {
+          if (!v) navigate({ to: "/events" });
+        }}
+      />
+    );
+  }
 
   async function useMyLocation() {
     if (!("geolocation" in navigator)) {
