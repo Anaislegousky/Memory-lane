@@ -334,6 +334,7 @@ export function PhotoGallery({
           tagsByPhoto={tagsByPhoto}
           currentUserId={user?.id ?? ""}
           isOwner={isOwner}
+          isGuest={isGuest}
           onIndex={setOpenIdx}
           onClose={() => setOpenIdx(null)}
           onChange={onChange}
