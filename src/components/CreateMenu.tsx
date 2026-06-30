@@ -134,9 +134,13 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
     }
   }
 
-  if (!open) return null;
+  if (!open) {
+    return <GuestUpgradeDialog action="create_event" open={gateOpen} onOpenChange={setGateOpen} />;
+  }
 
   return (
+    <>
+    <GuestUpgradeDialog action="create_event" open={gateOpen} onOpenChange={setGateOpen} />
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={close}>
       <div
         className="w-full max-w-md rounded-t-3xl bg-card p-5 pb-8 shadow-xl animate-in slide-in-from-bottom"
