@@ -7,8 +7,7 @@ import { toast } from "sonner";
 import { Plus, Camera, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
-const hiddenInputStyle =
-  "absolute h-px w-px overflow-hidden border-0 p-0 opacity-0 pointer-events-none";
+const hiddenInputStyle = "absolute h-px w-px overflow-hidden border-0 p-0 opacity-0 pointer-events-none";
 
 const GUEST_PHOTO_LIMIT = 10;
 
@@ -45,10 +44,9 @@ export function PhotoUploader({
     return true;
   }
 
-async function pick(ref: React.RefObject<HTMLInputElement | null>) {
-  if (!(await checkGuestLimit(1))) return; // 1 = nombre de photos à ajouter
-  ref.current?.click();
-}
+  async function pick(ref: React.RefObject<HTMLInputElement | null>) {
+    if (!(await checkGuestLimit(1))) return; // 1 = nombre de photos à ajouter
+    ref.current?.click();
   }
 
   async function onChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -140,11 +138,7 @@ async function pick(ref: React.RefObject<HTMLInputElement | null>) {
         tabIndex={-1}
         aria-hidden="true"
       />
-      <GuestUpgradeDialog
-        action="upload_limit"
-        open={limitOpen}
-        onOpenChange={setLimitOpen}
-      />
+      <GuestUpgradeDialog action="upload_limit" open={limitOpen} onOpenChange={setLimitOpen} />
     </>
   );
 }
