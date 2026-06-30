@@ -35,10 +35,10 @@ function Landing() {
         <div className="space-y-3">
           <Link
             to="/auth"
-            search={{ mode: "guest" }}
+            search={{ mode: "signup" }}
             className="block w-full rounded-full bg-primary px-5 py-3.5 text-center text-base font-medium text-primary-foreground"
           >
-            Commencer
+            Créer un compte
           </Link>
           <Link
             to="/auth"

@@ -1,14 +1,8 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/components/AuthProvider";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Copy, Mail, MessageCircle, Send, Share2, X, Loader2 } from "lucide-react";
-
-function randomToken() {
-  const a = new Uint8Array(16);
-  crypto.getRandomValues(a);
-  return Array.from(a, (b) => b.toString(36).padStart(2, "0")).join("").slice(0, 22);
-}
+import { createInvite } from "@/lib/invites.functions";
 
 export function InviteShareSheet({
   scope,
@@ -21,26 +15,22 @@ export function InviteShareSheet({
   eventName?: string;
   onClose: () => void;
 }) {
-  const { user } = useAuth();
+  const createInviteFn = useServerFn(createInvite);
   const [link, setLink] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Auto-create the invite link on mount
   useEffect(() => {
-    if (!user) return;
     let cancelled = false;
     (async () => {
       try {
-        const token = randomToken();
-        const { error } = await supabase.from("invites").insert({
-          token,
-          inviter_id: user.id,
-          scope,
-          event_id: scope === "event" ? eventId : null,
-          expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
+        const { token, secret_code } = await createInviteFn({
+          data: { scope, event_id: scope === "event" ? eventId : null },
         });
-        if (error) throw error;
-        if (!cancelled) setLink(`${window.location.origin}/join/${token}`);
+        if (cancelled) return;
+        setCode(secret_code);
+        setLink(`${window.location.origin}/join/${token}?code=${secret_code}`);
       } catch (err: any) {
         if (!cancelled) setError(err?.message || "Impossible de créer l'invitation");
       }
@@ -48,7 +38,7 @@ export function InviteShareSheet({
     return () => {
       cancelled = true;
     };
-  }, [user, scope, eventId]);
+  }, [createInviteFn, scope, eventId]);
 
   const message = scope === "event" && eventName
     ? `Rejoins-moi sur Memories pour partager les photos de « ${eventName} » :`
@@ -210,22 +200,34 @@ export function InviteShareSheet({
           })}
         </div>
 
-        {/* Link preview */}
-        <div className="mt-5 flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
-          <span className="flex-1 truncate text-xs text-muted-foreground">
-            {link ?? (error ? error : "Génération du lien…")}
-          </span>
-          {link && (
-            <button
-              onClick={copy}
-              className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
-            >
-              Copier
-            </button>
+        {/* Link preview + secret code */}
+        <div className="mt-5 space-y-2">
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
+            <span className="flex-1 truncate text-xs text-muted-foreground">
+              {link ?? (error ? error : "Génération du lien…")}
+            </span>
+            {link && (
+              <button
+                onClick={copy}
+                className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
+              >
+                Copier
+              </button>
+            )}
+          </div>
+          {code && (
+            <div className="flex items-center justify-between rounded-xl border border-dashed border-border bg-accent/40 px-3 py-2 text-xs">
+              <span className="text-muted-foreground">Code d'accès</span>
+              <span className="font-mono text-base font-semibold tracking-[0.3em] text-foreground">
+                {code}
+              </span>
+            </div>
           )}
         </div>
 
-        <p className="mt-3 text-center text-[11px] text-muted-foreground">Le lien expire dans 30 jours.</p>
+        <p className="mt-3 text-center text-[11px] text-muted-foreground">
+          Le lien et le code expirent dans 14 jours.
+        </p>
       </div>
     </div>
   );

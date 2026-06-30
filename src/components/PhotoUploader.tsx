@@ -2,12 +2,15 @@ import { useRef, useState } from "react";
 import imageCompression from "browser-image-compression";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import { useIsGuest, GuestUpgradeDialog } from "@/components/GuestGate";
 import { toast } from "sonner";
 import { Plus, Camera, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 const hiddenInputStyle =
   "absolute h-px w-px overflow-hidden border-0 p-0 opacity-0 pointer-events-none";
+
+const GUEST_PHOTO_LIMIT = 10;
 
 export function PhotoUploader({
   eventId,
@@ -19,14 +22,52 @@ export function PhotoUploader({
   variant?: "compact" | "full";
 }) {
   const { user } = useAuth();
+  const isGuest = useIsGuest();
   const queryClient = useQueryClient();
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [limitOpen, setLimitOpen] = useState(false);
+
+  // Returns true if upload may proceed; false if guest limit hit.
+  async function checkGuestLimit(incoming: number): Promise<boolean> {
+    if (!isGuest || !user) return true;
+    const { count } = await supabase
+      .from("photos")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", eventId)
+      .eq("uploader_id", user.id);
+    const current = count ?? 0;
+    if (current + incoming > GUEST_PHOTO_LIMIT) {
+      setLimitOpen(true);
+      return false;
+    }
+    return true;
+  }
+
+  async function pick(ref: React.RefObject<HTMLInputElement | null>) {
+    if (isGuest && user) {
+      const { count } = await supabase
+        .from("photos")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", eventId)
+        .eq("uploader_id", user.id);
+      if ((count ?? 0) >= GUEST_PHOTO_LIMIT) {
+        setLimitOpen(true);
+        return;
+      }
+    }
+    ref.current?.click();
+  }
 
   async function onChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (!user || !e.target.files?.length) return;
     const files = Array.from(e.target.files);
+    if (!(await checkGuestLimit(files.length))) {
+      if (galleryRef.current) galleryRef.current.value = "";
+      if (cameraRef.current) cameraRef.current.value = "";
+      return;
+    }
     setBusy(true);
     let ok = 0;
     for (const file of files) {
@@ -70,7 +111,7 @@ export function PhotoUploader({
     <>
       <button
         type="button"
-        onClick={() => galleryRef.current?.click()}
+        onClick={() => pick(galleryRef)}
         disabled={busy}
         aria-label="Ajouter des photos"
         className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition active:scale-[0.98] disabled:opacity-60"
@@ -80,7 +121,7 @@ export function PhotoUploader({
       </button>
       <button
         type="button"
-        onClick={() => cameraRef.current?.click()}
+        onClick={() => pick(cameraRef)}
         disabled={busy}
         aria-label="Prendre une photo"
         title="Prendre une photo"
@@ -107,6 +148,11 @@ export function PhotoUploader({
         className={hiddenInputStyle}
         tabIndex={-1}
         aria-hidden="true"
+      />
+      <GuestUpgradeDialog
+        action="upload_limit"
+        open={limitOpen}
+        onOpenChange={setLimitOpen}
       />
     </>
   );

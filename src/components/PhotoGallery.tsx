@@ -3,6 +3,7 @@ import { signedUrlsFor } from "@/lib/photo-urls";
 import { Tag as TagIcon, X, Trash2, Download, Check, ChevronLeft, ChevronRight, CheckSquare, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import { useIsGuest, GuestUpgradeDialog, type GateAction } from "@/components/GuestGate";
 import { toast } from "sonner";
 import JSZip from "jszip";
 import { useQueryClient } from "@tanstack/react-query";
@@ -85,6 +86,7 @@ export function PhotoGallery({
   count?: number;
 }) {
   const { user } = useAuth();
+  const isGuest = useIsGuest();
   const queryClient = useQueryClient();
   const [urls, setUrls] = useState<Map<string, string>>(new Map());
   const [openIdx, setOpenIdx] = useState<number | null>(null);
@@ -92,6 +94,7 @@ export function PhotoGallery({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [gateAction, setGateAction] = useState<GateAction | null>(null);
 
   useEffect(() => {
     const paths = photos.map((p) => p.storage_path);
@@ -123,6 +126,10 @@ export function PhotoGallery({
   }
 
   async function downloadSelected() {
+    if (isGuest) {
+      setGateAction("download");
+      return;
+    }
     const items = photos
       .filter((p) => selected.has(p.id))
       .map((p) => ({ url: urls.get(p.storage_path) ?? "", name: filenameFor(p) }))
@@ -140,6 +147,10 @@ export function PhotoGallery({
   }
 
   async function downloadAll() {
+    if (isGuest) {
+      setGateAction("download");
+      return;
+    }
     const items = photos
       .map((p) => ({ url: urls.get(p.storage_path) ?? "", name: filenameFor(p) }))
       .filter((i) => i.url);
@@ -276,6 +287,12 @@ export function PhotoGallery({
         </AlertDialogContent>
       </AlertDialog>
 
+      <GuestUpgradeDialog
+        action={gateAction ?? "download"}
+        open={!!gateAction}
+        onOpenChange={(v) => !v && setGateAction(null)}
+      />
+
 
       <div className="grid grid-cols-3 gap-0.5 px-0.5 sm:grid-cols-3">
 
@@ -317,6 +334,7 @@ export function PhotoGallery({
           tagsByPhoto={tagsByPhoto}
           currentUserId={user?.id ?? ""}
           isOwner={isOwner}
+          isGuest={isGuest}
           onIndex={setOpenIdx}
           onClose={() => setOpenIdx(null)}
           onChange={onChange}
@@ -339,6 +357,7 @@ function Lightbox({
   tagsByPhoto,
   currentUserId,
   isOwner,
+  isGuest,
   onIndex,
   onClose,
   onChange,
@@ -351,6 +370,7 @@ function Lightbox({
   tagsByPhoto: Map<string, Tag[]>;
   currentUserId: string;
   isOwner: boolean;
+  isGuest: boolean;
   onIndex: (i: number) => void;
   onClose: () => void;
   onChange: () => void;
@@ -360,6 +380,7 @@ function Lightbox({
   const url = urls.get(photo.storage_path);
   const tags = tagsByPhoto.get(photo.id) ?? [];
   const [showTags, setShowTags] = useState(false);
+  const [gateAction, setGateAction] = useState<GateAction | null>(null);
   const tagged = new Set(tags.map((t) => t.tagged_user_id));
   const namesById = new Map(members.map((m) => [m.user_id, m.display_name]));
   const queryClient = useQueryClient();
@@ -424,6 +445,10 @@ function Lightbox({
   }
 
   async function download() {
+    if (isGuest) {
+      setGateAction("download");
+      return;
+    }
     if (!url) return;
     try {
       await downloadOne(url, filenameFor(photo));
@@ -524,6 +549,11 @@ function Lightbox({
           </div>
         </div>
       )}
+      <GuestUpgradeDialog
+        action={gateAction ?? "download"}
+        open={!!gateAction}
+        onOpenChange={(v) => !v && setGateAction(null)}
+      />
     </div>
   );
 }
