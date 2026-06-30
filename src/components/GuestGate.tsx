@@ -130,7 +130,7 @@ export function GuestUpgradeDialog({
           <AlertDialogAction
             onClick={() => {
               onOpenChange(false);
-              navigate({ to: "/auth", search: { mode: "signup" } });
+              navigate({ to: "/profile" });
             }}
           >
             Créer mon compte
