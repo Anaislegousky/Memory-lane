@@ -3,6 +3,7 @@ import { signedUrlsFor } from "@/lib/photo-urls";
 import { Tag as TagIcon, X, Trash2, Download, Check, ChevronLeft, ChevronRight, CheckSquare, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import { useIsGuest, GuestUpgradeDialog, type GateAction } from "@/components/GuestGate";
 import { toast } from "sonner";
 import JSZip from "jszip";
 import { useQueryClient } from "@tanstack/react-query";
@@ -85,6 +86,7 @@ export function PhotoGallery({
   count?: number;
 }) {
   const { user } = useAuth();
+  const isGuest = useIsGuest();
   const queryClient = useQueryClient();
   const [urls, setUrls] = useState<Map<string, string>>(new Map());
   const [openIdx, setOpenIdx] = useState<number | null>(null);
@@ -92,6 +94,7 @@ export function PhotoGallery({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [gateAction, setGateAction] = useState<GateAction | null>(null);
 
   useEffect(() => {
     const paths = photos.map((p) => p.storage_path);
