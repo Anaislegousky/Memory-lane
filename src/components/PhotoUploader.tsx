@@ -45,19 +45,10 @@ export function PhotoUploader({
     return true;
   }
 
-  async function pick(ref: React.RefObject<HTMLInputElement | null>) {
-    if (isGuest && user) {
-      const { count } = await supabase
-        .from("photos")
-        .select("id", { count: "exact", head: true })
-        .eq("event_id", eventId)
-        .eq("uploader_id", user.id);
-      if ((count ?? 0) >= GUEST_PHOTO_LIMIT) {
-        setLimitOpen(true);
-        return;
-      }
-    }
-    ref.current?.click();
+async function pick(ref: React.RefObject<HTMLInputElement | null>) {
+  if (!(await checkGuestLimit(1))) return; // 1 = nombre de photos à ajouter
+  ref.current?.click();
+}
   }
 
   async function onChange(e: React.ChangeEvent<HTMLInputElement>) {
