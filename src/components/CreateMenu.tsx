@@ -161,7 +161,7 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
         {phase === "menu" && (
           <div className="space-y-2">
             <button
-              onClick={() => galleryRef.current?.click()}
+              onClick={() => guard(() => galleryRef.current?.click())}
               className="flex w-full items-center gap-3 rounded-2xl bg-primary p-4 text-left text-primary-foreground"
             >
               <ImagePlus className="h-5 w-5" />
@@ -171,7 +171,7 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
               </div>
             </button>
             <button
-              onClick={() => cameraRef.current?.click()}
+              onClick={() => guard(() => cameraRef.current?.click())}
               className="flex w-full items-center gap-3 rounded-2xl border border-border bg-background p-4 text-left"
             >
               <Camera className="h-5 w-5" />
@@ -181,10 +181,12 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
               </div>
             </button>
             <button
-              onClick={() => {
-                close();
-                navigate({ to: "/events/new" });
-              }}
+              onClick={() =>
+                guard(() => {
+                  close();
+                  navigate({ to: "/events/new" });
+                })
+              }
               className="flex w-full items-center gap-3 rounded-2xl border border-border bg-background p-4 text-left"
             >
               <CalendarPlus className="h-5 w-5" />
