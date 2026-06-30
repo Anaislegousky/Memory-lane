@@ -45,7 +45,7 @@ export function PhotoUploader({
     return true;
   }
 
-  async function pick(ref: React.RefObject<HTMLInputElement>) {
+  async function pick(ref: React.RefObject<HTMLInputElement | null>) {
     if (isGuest && user) {
       const { count } = await supabase
         .from("photos")
