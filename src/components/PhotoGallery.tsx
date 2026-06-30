@@ -126,6 +126,10 @@ export function PhotoGallery({
   }
 
   async function downloadSelected() {
+    if (isGuest) {
+      setGateAction("download");
+      return;
+    }
     const items = photos
       .filter((p) => selected.has(p.id))
       .map((p) => ({ url: urls.get(p.storage_path) ?? "", name: filenameFor(p) }))
@@ -143,6 +147,10 @@ export function PhotoGallery({
   }
 
   async function downloadAll() {
+    if (isGuest) {
+      setGateAction("download");
+      return;
+    }
     const items = photos
       .map((p) => ({ url: urls.get(p.storage_path) ?? "", name: filenameFor(p) }))
       .filter((i) => i.url);
