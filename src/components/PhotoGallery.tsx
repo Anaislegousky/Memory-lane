@@ -549,6 +549,11 @@ function Lightbox({
           </div>
         </div>
       )}
+      <GuestUpgradeDialog
+        action={gateAction ?? "download"}
+        open={!!gateAction}
+        onOpenChange={(v) => !v && setGateAction(null)}
+      />
     </div>
   );
 }
