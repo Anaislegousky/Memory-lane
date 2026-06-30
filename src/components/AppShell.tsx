@@ -14,7 +14,7 @@ export function AppShell({
 }) {
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto flex min-h-screen max-w-md flex-col pb-26">
+      <div className="mx-auto flex min-h-screen max-w-md flex-col pb-24">
         {title !== undefined && (
           <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur">
             <h1 className="font-display text-2xl tracking-tight">{title}</h1>
