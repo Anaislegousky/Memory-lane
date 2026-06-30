@@ -20,6 +20,7 @@ type Phase = "menu" | "reading" | "preview" | "uploading";
 export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isGuest = useIsGuest();
   const qc = useQueryClient();
   const createEventFn = useServerFn(createEvent);
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -27,6 +28,15 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
   const [phase, setPhase] = useState<Phase>("menu");
   const [groups, setGroups] = useState<EventGroup[]>([]);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [gateOpen, setGateOpen] = useState(false);
+
+  function guard(fn: () => void) {
+    if (isGuest) {
+      setGateOpen(true);
+      return;
+    }
+    fn();
+  }
 
   function reset() {
     setPhase("menu");
