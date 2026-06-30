@@ -62,8 +62,7 @@ function EventsPage() {
                   {ev.photo_count} photo{ev.photo_count > 1 ? "s" : ""} de « {ev.event_name} »
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Suppression dans{" "}
-                  {formatDistanceToNowStrict(new Date(ev.earliest_expiry), { locale: fr })}
+                  Suppression dans {formatDistanceToNowStrict(new Date(ev.earliest_expiry), { locale: fr })}
                 </p>
               </div>
             </Link>
@@ -89,9 +88,9 @@ function EventsPage() {
                   {e.event_date && (
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />
-                      {e.end_date && e.end_date !== e.event_date
-                        ? `${format(new Date(e.event_date), "d MMM", { locale: fr })} – ${format(new Date(e.end_date), "d MMM yyyy", { locale: fr })}`
-                        : format(new Date(e.event_date), "d MMM yyyy", { locale: fr })}
+                      {e.end_date && e.end_date !== e.event_date // (Suggestion vibe code)
+                        ? `${formatDateInUserTimeZone(e.event_date)} – ${formatDateInUserTimeZone(e.end_date)}`
+                        : formatDateInUserTimeZone(e.event_date)}
                     </span>
                   )}
                   {e.location_label && (
