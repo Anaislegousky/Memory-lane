@@ -92,7 +92,7 @@ export function GuestGate({
             <AlertDialogAction
               onClick={() => {
                 setOpen(false);
-                navigate({ to: "/auth", search: { mode: "signup" } });
+                navigate({ to: "/profile" });
               }}
             >
               Créer mon compte
