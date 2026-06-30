@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { createEvent, geocodeSearch, geocodeReverse } from "@/lib/events.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import { useIsGuest, GuestUpgradeDialog } from "@/components/GuestGate";
 import {
   readPhotoMeta,
   groupPhotosIntoEvents,
