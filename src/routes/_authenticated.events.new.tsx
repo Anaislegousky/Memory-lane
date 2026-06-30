@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createEvent, geocodeSearch, geocodeReverse } from "@/lib/events.functions";
 import { toast } from "sonner";
 import { MapPin, Locate, Search } from "lucide-react";
+import { useIsGuest, GuestUpgradeDialog } from "@/components/GuestGate";
 
 export const Route = createFileRoute("/_authenticated/events/new")({
   head: () => ({ meta: [{ title: "Nouvel événement — Memories" }] }),
