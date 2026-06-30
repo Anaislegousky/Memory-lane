@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { CreateMenu } from "@/components/CreateMenu";
+import { GuestGate } from "@/components/GuestGate";
 import { Plus, MapPin, Calendar, AlertTriangle } from "lucide-react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { fr } from "date-fns/locale";
