@@ -135,6 +135,7 @@ export type Database = {
           inviter_id: string
           max_uses: number | null
           scope: string
+          secret_code: string
           token: string
           used_count: number
         }
@@ -146,6 +147,7 @@ export type Database = {
           inviter_id: string
           max_uses?: number | null
           scope: string
+          secret_code: string
           token: string
           used_count?: number
         }
@@ -157,6 +159,7 @@ export type Database = {
           inviter_id?: string
           max_uses?: number | null
           scope?: string
+          secret_code?: string
           token?: string
           used_count?: number
         }
