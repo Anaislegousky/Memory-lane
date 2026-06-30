@@ -45,7 +45,6 @@ export function PhotoUploader({
   }
 
   async function pick(ref: React.RefObject<HTMLInputElement | null>) {
-    if (!(await checkGuestLimit(1))) return; // 1 = nombre de photos à ajouter
     ref.current?.click();
   }
 
