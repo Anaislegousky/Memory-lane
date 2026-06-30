@@ -287,6 +287,12 @@ export function PhotoGallery({
         </AlertDialogContent>
       </AlertDialog>
 
+      <GuestUpgradeDialog
+        action={gateAction ?? "download"}
+        open={!!gateAction}
+        onOpenChange={(v) => !v && setGateAction(null)}
+      />
+
 
       <div className="grid grid-cols-3 gap-0.5 px-0.5 sm:grid-cols-3">
 
