@@ -21,7 +21,7 @@ export function AppShell({
             {action}
           </header>
         )}
-        <main className={fullBleed ? "flex-1" : "flex-1 px-4 py-4"}>{children}</main>
+        <main className={fullBleed ? "flex-1" : "flex-1 px-4"}>{children}</main>
       </div>
       <BottomNav />
     </div>
