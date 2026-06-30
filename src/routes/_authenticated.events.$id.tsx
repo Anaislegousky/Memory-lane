@@ -13,6 +13,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { shortAddress } from "@/lib/format-address";
 import { EventEditSheet } from "@/components/EventEditSheet";
+import { GuestGate } from "@/components/GuestGate";
 
 export const Route = createFileRoute("/_authenticated/events/$id")({
   head: () => ({ meta: [{ title: "Événement — Memories" }] }),
@@ -189,14 +190,18 @@ function EventDetail() {
             {/* Actions */}
             <div className="mt-3 flex items-center gap-2 px-5">
               <PhotoUploader eventId={ev.id} onUploaded={() => photosQ.refetch()} />
-              <button
-                onClick={() => setShareOpen(true)}
-                aria-label="Inviter des amis"
-                title="Inviter"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground transition active:scale-[0.98]"
-              >
-                <UserPlus className="h-5 w-5" />
-              </button>
+              <GuestGate action="invite" onAllowed={() => setShareOpen(true)}>
+                {(trigger) => (
+                  <button
+                    onClick={trigger}
+                    aria-label="Inviter des amis"
+                    title="Inviter"
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground transition active:scale-[0.98]"
+                  >
+                    <UserPlus className="h-5 w-5" />
+                  </button>
+                )}
+              </GuestGate>
             </div>
 
             {/* Participants */}
