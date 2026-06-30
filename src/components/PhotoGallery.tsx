@@ -357,6 +357,7 @@ function Lightbox({
   tagsByPhoto,
   currentUserId,
   isOwner,
+  isGuest,
   onIndex,
   onClose,
   onChange,
@@ -369,6 +370,7 @@ function Lightbox({
   tagsByPhoto: Map<string, Tag[]>;
   currentUserId: string;
   isOwner: boolean;
+  isGuest: boolean;
   onIndex: (i: number) => void;
   onClose: () => void;
   onChange: () => void;
@@ -378,6 +380,7 @@ function Lightbox({
   const url = urls.get(photo.storage_path);
   const tags = tagsByPhoto.get(photo.id) ?? [];
   const [showTags, setShowTags] = useState(false);
+  const [gateAction, setGateAction] = useState<GateAction | null>(null);
   const tagged = new Set(tags.map((t) => t.tagged_user_id));
   const namesById = new Map(members.map((m) => [m.user_id, m.display_name]));
   const queryClient = useQueryClient();
@@ -442,6 +445,10 @@ function Lightbox({
   }
 
   async function download() {
+    if (isGuest) {
+      setGateAction("download");
+      return;
+    }
     if (!url) return;
     try {
       await downloadOne(url, filenameFor(photo));
