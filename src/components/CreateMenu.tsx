@@ -275,6 +275,7 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
         />
       </div>
     </div>
+    </>
   );
 }
 
