@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
-import imageCompression from "browser-image-compression";
+import { preparePhotoForUpload } from "@/lib/photo-prepare";
 import { ImagePlus, Camera, CalendarPlus, X, Loader2, MapPin, Locate, Search } from "lucide-react";
 import { toast } from "sonner";
 import { createEvent, geocodeSearch, geocodeReverse } from "@/lib/events.functions";
@@ -29,6 +29,8 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
   const [groups, setGroups] = useState<EventGroup[]>([]);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [gateOpen, setGateOpen] = useState(false);
+  // Événements dont l'utilisateur ne veut pas la position sur la carte.
+  const [hiddenOnMap, setHiddenOnMap] = useState<Set<string>>(new Set());
 
   function guard(fn: () => void) {
     if (isGuest) {
@@ -39,6 +41,7 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
   }
 
   function reset() {
+    setHiddenOnMap(new Set());
     setPhase("menu");
     setGroups([]);
     setProgress({ done: 0, total: 0 });
@@ -85,24 +88,19 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
             event_date: g.event_date,
             end_date: g.end_date,
             location_label: g.location_label || null,
-            lat: g.lat,
-            lng: g.lng,
+            lat: hiddenOnMap.has(g.id) ? null : g.lat,
+            lng: hiddenOnMap.has(g.id) ? null : g.lng,
           },
         });
         lastEventId = ev.id;
         for (const photo of g.photos) {
           try {
-            const compressed = await imageCompression(photo.file, {
-              maxSizeMB: 1.5,
-              maxWidthOrHeight: 2000,
-              useWebWorker: true,
-            });
-            const ext = (photo.file.name.split(".").pop() || "jpg").toLowerCase();
+            const { blob, ext } = await preparePhotoForUpload(photo.file);
             const id = crypto.randomUUID();
             const path = `${ev.id}/${id}.${ext}`;
             const { error: upErr } = await supabase.storage
               .from("event-photos")
-              .upload(path, compressed, { contentType: compressed.type || photo.file.type });
+              .upload(path, blob, { contentType: blob.type || photo.file.type });
             if (upErr) throw upErr;
             const { error: dbErr } = await supabase.from("photos").insert({
               id,
@@ -219,6 +217,30 @@ export function CreateMenu({ open, onClose }: { open: boolean; onClose: () => vo
 
                 {/* Location card — same shape as /events/new */}
                 <LocationCard group={g} onChange={(patch) => updateGroup(g.id, patch)} />
+
+                {g.lat != null && g.lng != null && (
+                  <label className="flex items-start gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5"
+                      checked={!hiddenOnMap.has(g.id)}
+                      onChange={(e) =>
+                        setHiddenOnMap((prev) => {
+                          const next = new Set(prev);
+                          if (e.target.checked) next.delete(g.id);
+                          else next.add(g.id);
+                          return next;
+                        })
+                      }
+                    />
+                    <span>
+                      Afficher cet événement sur la carte
+                      <span className="block text-xs text-muted-foreground">
+                        Les coordonnées GPS sont toujours retirées des photos envoyées.
+                      </span>
+                    </span>
+                  </label>
+                )}
 
                 <div className="flex gap-1.5 overflow-x-auto">
                   {g.photos.slice(0, 8).map((p, i) => (

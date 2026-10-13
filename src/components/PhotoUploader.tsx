@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import imageCompression from "browser-image-compression";
+import { preparePhotoForUpload } from "@/lib/photo-prepare";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { useIsGuest, GuestUpgradeDialog } from "@/components/GuestGate";
@@ -60,17 +60,12 @@ export function PhotoUploader({
     let ok = 0;
     for (const file of files) {
       try {
-        const compressed = await imageCompression(file, {
-          maxSizeMB: 1.5,
-          maxWidthOrHeight: 2000,
-          useWebWorker: true,
-        });
-        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+        const { blob, ext } = await preparePhotoForUpload(file);
         const id = crypto.randomUUID();
         const path = `${eventId}/${id}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("event-photos")
-          .upload(path, compressed, { contentType: compressed.type || file.type, upsert: false });
+          .upload(path, blob, { contentType: blob.type || file.type, upsert: false });
         if (upErr) throw upErr;
         const { error: dbErr } = await supabase.from("photos").insert({
           id,
