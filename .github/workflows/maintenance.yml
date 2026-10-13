@@ -1,6 +1,9 @@
-# Maintenance automatique de Memories.
+# Maintenance manuelle de Memories.
 #
-# Chaque lundi (et à la demande, onglet « Actions » → « Run workflow ») :
+# Lancement manuel uniquement (onglet « Actions » → « Maintenance » → « Run workflow »),
+# par exemple pour tester ou si le site a été en panne plusieurs jours.
+# Le nettoyage hebdomadaire automatique est fait par Vercel (voir vite.config.ts).
+#
 #  1. appelle la route de nettoyage des photos expirées de l'app (protégée par CRON_SECRET) ;
 #  2. interroge directement Supabase, pour que le projet gratuit ne se mette pas en pause
 #     (pause automatique après 7 jours sans activité), même si l'app ne répond pas.
@@ -10,16 +13,10 @@
 #  - CRON_SECRET                la même valeur que sur Vercel
 #  - SUPABASE_URL               ex. https://xxxx.supabase.co
 #  - SUPABASE_PUBLISHABLE_KEY   la clé publique (sb_publishable_...)
-#
-# Remarque : sur un dépôt public, GitHub désactive les tâches planifiées après 60 jours
-# sans commit (il prévient par e-mail ; un clic suffit pour les réactiver). La tâche
-# quotidienne Vercel (voir vite.config.ts) prend le relais en attendant.
 
 name: Maintenance
 
 on:
-  schedule:
-    - cron: "23 6 * * 1"
   workflow_dispatch:
 
 permissions: {}

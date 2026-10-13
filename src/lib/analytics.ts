@@ -3,7 +3,9 @@
 // Règles de confidentialité appliquées ici :
 // - rien n'est chargé ni envoyé tant que la personne n'a pas cliqué sur « Accepter » ;
 // - pas d'enregistrement de session (les photos privées des événements apparaîtraient
-//   dans les vidéos) ni de capture automatique des clics ;
+//   dans les vidéos) ;
+// - suivi des clics sur boutons et liens : on garde le libellé des boutons (« Inviter »,
+//   « Télécharger »…) mais jamais le texte des liens, qui contient les noms d'événements ;
 // - les liens d'invitation (/join/<jeton>?code=…) sont masqués avant envoi, sinon
 //   n'importe qui ayant accès à PostHog pourrait rejoindre l'événement.
 
@@ -68,7 +70,8 @@ export function startAnalytics() {
         api_host: POSTHOG_HOST,
         capture_pageview: "history_change",
         capture_pageleave: true,
-        autocapture: false,
+        // Suivi des clics sur les boutons et les liens uniquement (pas de saisie de texte).
+        autocapture: { dom_event_allowlist: ["click"], element_allowlist: ["button", "a"] },
         rageclick: false,
         capture_heatmaps: false,
         capture_dead_clicks: false,
@@ -128,7 +131,34 @@ function scrubValue(value: string) {
     }
   }
   if (value.startsWith("/")) return scrubPath(value.split(/[?#]/)[0]);
-  return value;
+  // Filet de sécurité pour les textes composites (ex. $elements_chain des clics).
+  return scrubPath(value).replace(/([?&]code=)[^&"\s]*/gi, "$1:code");
+}
+
+// Pour un clic, on ne garde le texte que s'il s'agit d'un bouton.
+function stripLinkText(props: Record<string, unknown>) {
+  const chain = props.$elements_chain;
+  if (typeof chain === "string") {
+    props.$elements_chain = chain
+      .split(";")
+      .map((part) =>
+        /^button[.:]?/.test(part) ? part : part.replace(/text="(?:[^"\\]|\\.)*"/g, ""),
+      )
+      .join(";");
+  }
+  const elements = props.$elements;
+  if (Array.isArray(elements)) {
+    for (const el of elements as Record<string, unknown>[]) {
+      if (el && el.tag_name !== "button") delete el.$el_text;
+      if (el && typeof el.attr__href === "string") el.attr__href = scrubValue(el.attr__href);
+    }
+  }
+  const target = Array.isArray(elements)
+    ? (elements[0] as Record<string, unknown> | undefined)
+    : undefined;
+  const targetTag =
+    target?.tag_name ?? (typeof chain === "string" ? chain.split(/[.:;]/)[0] : undefined);
+  if (targetTag !== "button") delete props.$el_text;
 }
 
 function scrubProps(props: Record<string, unknown> | undefined) {
@@ -140,12 +170,14 @@ function scrubProps(props: Record<string, unknown> | undefined) {
 
 function scrubEvent<
   T extends {
+    event: string;
     properties: Record<string, unknown>;
     $set?: Record<string, unknown>;
     $set_once?: Record<string, unknown>;
   } | null,
 >(event: T): T {
   if (!event) return event;
+  if (event.event === "$autocapture") stripLinkText(event.properties);
   scrubProps(event.properties);
   scrubProps(event.$set);
   scrubProps(event.$set_once);

@@ -142,11 +142,14 @@ servira aussi à l'étape 4. (Il faut au moins 32 caractères, sinon le nettoyag
   remettez `main`.
 - Après chaque modification de variable, relancez un déploiement : *Deployments → ⋯ → Redeploy*.
 
-### Tâche automatique quotidienne
+### Tâche automatique hebdomadaire
 
-Vercel lance tout seul, chaque nuit, le nettoyage des photos expirées (plus de 90 jours). C'est
-configuré dans `vite.config.ts` et visible dans *Settings → Cron Jobs*. Rien à faire, à part avoir
-défini `CRON_SECRET`.
+Chaque lundi vers 3 h du matin, Vercel lance tout seul le nettoyage des photos expirées (plus de
+90 jours). C'est configuré dans `vite.config.ts` et visible dans *Settings → Cron Jobs*. Rien à faire,
+à part avoir défini `CRON_SECRET`.
+
+Pourquoi une fois par semaine et pas moins ? Ce passage sert aussi à « réveiller » Supabase : un projet
+gratuit se met en pause après 7 jours sans activité. Une fois par semaine est donc le minimum.
 
 ---
 
@@ -165,17 +168,27 @@ de cookies ne s'affiche pas.
 Ce que fait l'application :
 - rien n'est chargé tant que la personne n'a pas cliqué sur **Accepter** ;
 - les boutons « Accepter » et « Refuser » ont la même apparence (recommandation CNIL) ;
-- seules les pages visitées sont mesurées, **sans** les liens d'invitation secrets ;
-- pas d'enregistrement d'écran, pas de suivi des clics ;
+- sont mesurés : les pages visitées et les clics sur les boutons et les liens ;
+- le libellé des boutons est gardé (« Inviter », « Télécharger »…), mais jamais le texte des liens
+  (qui contient les noms d'événements) ni les liens d'invitation secrets ;
+- pas d'enregistrement d'écran ;
 - chacun peut changer d'avis depuis la page *Politique de confidentialité*.
+
+### Voir les statistiques
+
+Connectez-vous sur <https://eu.posthog.com> avec votre compte :
+- **Activity** : la liste des événements en direct (pages vues `$pageview`, clics `$autocapture`).
+- **Web analytics** : tableau de bord tout prêt (visiteurs, pages les plus vues, appareils, pays).
+- **Product analytics → New insight** : par exemple, compter les clics sur le bouton « Inviter ».
+
+Seules les personnes ayant accepté la bannière apparaissent : les chiffres sont donc partiels.
 
 ---
 
-## Étape 4 — Tâche hebdomadaire GitHub (anti-pause)
+## Étape 4 — Bouton de maintenance GitHub (facultatif)
 
-Un projet Supabase gratuit se met en pause après 7 jours sans activité. La tâche quotidienne de Vercel
-l'en empêche déjà ; une tâche GitHub hebdomadaire sert de filet de sécurité (elle interroge Supabase
-directement, même si le site ne répond pas).
+Un bouton dans GitHub permet de lancer le nettoyage à la main et de réveiller Supabase, par exemple
+pour tester, ou si le site a été en panne plusieurs jours. Il ne se lance jamais tout seul.
 
 1. Sur GitHub, dans le dépôt : *Settings → Secrets and variables → Actions → New repository secret*.
 2. Créez ces 4 secrets :
@@ -187,14 +200,8 @@ directement, même si le site ne répond pas).
 | `SUPABASE_URL` | l'URL du projet Supabase |
 | `SUPABASE_PUBLISHABLE_KEY` | la clé publique `sb_publishable_…` |
 
-3. Testez : onglet **Actions → Maintenance → Run workflow**. Après une minute, une coche verte doit
-   apparaître.
-
-> La tâche GitHub ne tourne que depuis la branche par défaut (`main`). Elle sera active une fois les
-> changements fusionnés dans `main`. D'ici là, la tâche quotidienne de Vercel suffit.
->
-> Si le dépôt est public, GitHub met en veille les tâches planifiées après 60 jours sans commit et
-> prévient par e-mail : il suffit de cliquer sur « Enable workflow » dans l'onglet *Actions*.
+3. Pour l'utiliser : onglet **Actions → Maintenance → Run workflow**. Après une minute, une coche
+   verte doit apparaître. (Le bouton apparaît une fois les changements fusionnés dans `main`.)
 
 ---
 
@@ -206,7 +213,8 @@ directement, même si le site ne répond pas).
    l'événement en invité.
 4. Page *Profil* : testez l'export de vos données.
 5. Si PostHog est configuré : acceptez la bannière, naviguez, et vérifiez dans PostHog
-   (*Activity*) que les pages apparaissent, avec `/join/:token` à la place des vrais liens.
+   (*Activity*) que les pages et les clics apparaissent, avec `/join/:token` à la place des vrais
+   liens.
 
 ---
 

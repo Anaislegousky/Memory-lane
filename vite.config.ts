@@ -46,10 +46,11 @@ export default defineConfig(({ command, mode }) => {
           preset: "vercel",
           vercel: {
             functions: { regions: ["cdg1"] },
-            // Tâche planifiée Vercel : nettoyage des photos expirées chaque jour à 3 h 17 (UTC).
+            // Tâche planifiée Vercel, une fois par semaine (lundi 3 h 17 UTC) : supprime les photos
+            // expirées et, au passage, empêche Supabase gratuit de se mettre en pause (7 jours).
             config: {
               version: 3,
-              crons: [{ path: "/api/public/hooks/cleanup-photos", schedule: "17 3 * * *" }],
+              crons: [{ path: "/api/public/hooks/cleanup-photos", schedule: "17 3 * * 1" }],
             },
           },
         }),

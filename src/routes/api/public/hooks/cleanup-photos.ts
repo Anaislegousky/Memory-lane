@@ -4,10 +4,10 @@ import { createFileRoute } from "@tanstack/react-router";
 //
 // Protégé par un secret : l'appel doit porter l'en-tête
 //   Authorization: Bearer <CRON_SECRET>
-// Il est déclenché chaque jour par la tâche planifiée Vercel (qui ajoute cet en-tête
-// toute seule quand la variable CRON_SECRET existe) et chaque semaine par GitHub
-// Actions (.github/workflows/maintenance.yml). Chaque appel interroge la base, ce qui
-// évite aussi que le projet Supabase gratuit se mette en pause.
+// Il est déclenché chaque lundi par la tâche planifiée Vercel (qui ajoute cet en-tête
+// toute seule quand la variable CRON_SECRET existe), ou à la main depuis GitHub Actions
+// (.github/workflows/maintenance.yml). Chaque appel interroge la base, ce qui évite
+// aussi que le projet Supabase gratuit se mette en pause.
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {

@@ -28,9 +28,9 @@ export function CookieBanner() {
     <div className="fixed inset-x-2 bottom-2 z-50 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:max-w-sm">
       <div className="rounded-2xl border border-border bg-card p-4 shadow-lg">
         <p className="text-sm text-foreground">
-          Nous aimerions mesurer l'audience de Memories (pages visitées, de façon anonyme) avec
-          PostHog, hébergé dans l'Union européenne. Aucune photo, aucun enregistrement de votre
-          écran. Vous pouvez refuser sans que cela change quoi que ce soit à l'application.
+          Nous aimerions mesurer l'audience de Memories (pages visitées et boutons cliqués, de façon
+          anonyme) avec PostHog, hébergé dans l'Union européenne. Aucune photo, aucun enregistrement
+          de votre écran. Vous pouvez refuser sans que cela change quoi que ce soit à l'application.
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
           En savoir plus dans notre{" "}

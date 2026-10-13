@@ -66,9 +66,10 @@ function PrivacyPage() {
           </p>
           <p className="mt-2 text-sm">
             Uniquement si vous l'acceptez, nous mesurons l'audience avec PostHog, hébergé dans
-            l'Union européenne (Francfort, Allemagne) : pages visitées (sans les liens
-            d'invitation), type d'appareil et de navigateur, pays approximatif. Pas d'enregistrement
-            de votre écran, pas de publicité, pas de revente. Si vous refusez, rien n'est chargé.
+            l'Union européenne (Francfort, Allemagne) : pages visitées et clics sur les boutons et
+            les liens (sans le texte des liens ni les liens d'invitation), type d'appareil et de
+            navigateur, pays approximatif. Pas d'enregistrement de votre écran, pas de publicité,
+            pas de revente. Si vous refusez, rien n'est chargé.
           </p>
           <ConsentControl />
         </div>
