@@ -18,7 +18,6 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/components/AuthProvider";
 import { CookieBanner } from "@/components/CookieBanner";
@@ -40,18 +39,17 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="font-display text-2xl">Une erreur est survenue</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {error instanceof Error ? error.message : String(error)}
+        </p>
         <button
           onClick={() => {
             router.invalidate();
@@ -79,26 +77,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Un espace privé et sur invitation pour rassembler les photos de vos événements avec ceux qui y étaient.",
       },
       { property: "og:title", content: "Memories — Partagez vos souvenirs entre proches" },
-      { property: "og:description", content: "Memory Lane is a web app for creating and sharing event memories with photos and location mapping." },
+      {
+        property: "og:description",
+        content:
+          "Un espace privé et sur invitation pour rassembler les photos de vos événements avec ceux qui y étaient.",
+      },
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "fr_FR" },
+      { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Memories — Partagez vos souvenirs entre proches" },
-      { name: "description", content: "Memory Lane is a web app for creating and sharing event memories with photos and location mapping." },
-      { name: "twitter:description", content: "Memory Lane is a web app for creating and sharing event memories with photos and location mapping." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/9157553e-3cd0-476e-9c07-349ec738e3d8/id-preview-b762095b--59019f4b-0312-4156-8cf6-657cb034763a.lovable.app-1782246728248.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/9157553e-3cd0-476e-9c07-349ec738e3d8/id-preview-b762095b--59019f4b-0312-4156-8cf6-657cb034763a.lovable.app-1782246728248.png" },
-      { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:description",
+        content:
+          "Un espace privé et sur invitation pour rassembler les photos de vos événements avec ceux qui y étaient.",
+      },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
-    scripts: [
-      {
-        src: "https://cdn.amplitude.com/script/b4d90f23bde8f02a3a37ea9c2f558431.js",
-        async: true,
-      },
-      {
-        children: `window.amplitude && window.amplitude.add(window.sessionReplay.plugin({sampleRate:1})); window.amplitude && window.amplitude.init('b4d90f23bde8f02a3a37ea9c2f558431', {autocapture:{pageViews:true,sessions:true,elementInteractions:true}});`,
-      },
-    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,

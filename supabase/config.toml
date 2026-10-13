@@ -1,1 +1,2 @@
-project_id = "pxrocuzpnggwmjcvifxq"
+# Identifiant utilisé par le CLI Supabase. Remplacé par `supabase link --project-ref <ref>`.
+project_id = "memory-lane"
