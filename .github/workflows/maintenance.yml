@@ -1,0 +1,53 @@
+# Maintenance automatique de Memories.
+#
+# Chaque lundi (et à la demande, onglet « Actions » → « Run workflow ») :
+#  1. appelle la route de nettoyage des photos expirées de l'app (protégée par CRON_SECRET) ;
+#  2. interroge directement Supabase, pour que le projet gratuit ne se mette pas en pause
+#     (pause automatique après 7 jours sans activité), même si l'app ne répond pas.
+#
+# Secrets à créer dans GitHub → Settings → Secrets and variables → Actions :
+#  - APP_URL                    ex. https://memory-lane.vercel.app (sans / final)
+#  - CRON_SECRET                la même valeur que sur Vercel
+#  - SUPABASE_URL               ex. https://xxxx.supabase.co
+#  - SUPABASE_PUBLISHABLE_KEY   la clé publique (sb_publishable_...)
+#
+# Remarque : sur un dépôt public, GitHub désactive les tâches planifiées après 60 jours
+# sans commit (il prévient par e-mail ; un clic suffit pour les réactiver). La tâche
+# quotidienne Vercel (voir vite.config.ts) prend le relais en attendant.
+
+name: Maintenance
+
+on:
+  schedule:
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  maintenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Nettoyer les photos expirées
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl --fail-with-body --silent --show-error --max-time 60 \
+            --retry 3 --retry-delay 20 --retry-all-errors \
+            -X POST -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL}/api/public/hooks/cleanup-photos"
+
+      - name: Garder Supabase actif
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          # Appelle la fonction public.keepalive() (renvoie 1, ne lit aucune donnée).
+          curl --fail-with-body --silent --show-error --max-time 30 \
+            --retry 3 --retry-delay 20 --retry-all-errors \
+            -X POST -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
+            -H "Content-Type: application/json" -d '{}' \
+            "${SUPABASE_URL}/rest/v1/rpc/keepalive"
