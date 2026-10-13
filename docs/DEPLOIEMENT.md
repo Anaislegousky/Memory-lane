@@ -153,10 +153,13 @@ Integrations*) et gardez uniquement les vôtres.
 1. **Variables** : *Settings → Environment Variables*. Vous devez voir 6 noms (8 avec PostHog), écrits
    exactement comme dans le tableau (majuscules, sans espace). Les valeurs des variables *Sensitive*
    s'affichent masquées : c'est normal.
-2. **Bonne branche** : onglet *Deployments*. Le déploiement doit porter le nom de branche
-   `claude/hopeful-bardeen-ddyvra` et l'étiquette *Production*. Sinon : *Settings → Git → Production
-   Branch* (ou *Settings → Environments → Production → Branch Tracking*, selon la version de
-   l'interface), mettez cette branche, puis *Deployments → ⋯ → Redeploy*.
+2. **Bonne branche** : onglet *Deployments*. Sur Vercel, le site « Production » est celui de la
+   branche par défaut de GitHub (`main`). Tant que les changements ne sont pas fusionnés, le
+   déploiement de la branche de travail (`claude/hopeful-bardeen-ddyvra`) est donc un
+   déploiement d'essai (*Preview*), et c'est normal : voir « Tester avant la mise en production ».
+   Vous ne trouvez pas de réglage « Production Branch » dans *Settings → Git* ? Cherchez
+   *Settings → Environments → Production → Branch Tracking*. S'il n'existe pas non plus, suivez
+   « Tester avant la mise en production ».
 3. **Construction réussie** : cliquez sur le déploiement. Il doit être *Ready* (vert). En cas
    d'échec, ouvrez *Build Logs* et copiez les dernières lignes rouges dans la conversation.
 4. **Le site répond** : ouvrez l'adresse du site, puis `/privacy`. Si une page affiche
@@ -168,15 +171,28 @@ Integrations*) et gardez uniquement les vôtres.
    `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` sont corrects. Si le résultat est `401`,
    `CRON_SECRET` manque ou fait moins de 32 caractères ; si c'est `500`, regardez l'URL et la clé
    secrète Supabase.
-   (Les tâches planifiées n'existent que sur le déploiement *Production*, d'où le point 2.)
+   (Les tâches planifiées n'existent que sur le déploiement *Production* : ce test n'est possible
+   qu'après la mise en production.)
+
+### Tester avant la mise en production
+
+Le déploiement d'essai (*Preview*) est un vrai site : cliquez sur le déploiement dans *Deployments*,
+puis sur **Visit**. Deux particularités :
+
+- Par défaut, Vercel le protège : il faut être connecté à votre compte Vercel pour l'ouvrir. Pour
+  tester un lien d'invitation avec un invité, ouvrez-le dans la même session, ou désactivez
+  temporairement la protection (*Settings → Deployment Protection → Vercel Authentication*).
+  Remettez-la ensuite : elle protège vos déploiements d'essai.
+- Chaque déploiement d'essai a une adresse différente. Pour l'adresse de connexion de Supabase,
+  attendez la mise en production : l'adresse définitive sera `https://memory-lane….vercel.app`.
+
+Quand tout marche, fusionnez la branche dans `main` (étape 6) : Vercel crée alors le déploiement
+*Production*, avec l'adresse définitive et la tâche du lundi.
 
 ### Régions et branche
 
 - *Settings → Functions → Function Region* : vérifiez que **Paris, France (cdg1)** est sélectionné
   (le code le demande déjà, ce réglage le confirme).
-- *Settings → Git → Production Branch* : pendant la phase de test, indiquez la branche de travail
-  (celle qui contient ces changements). Une fois tout validé et la branche fusionnée dans `main`,
-  remettez `main`.
 - Après chaque modification de variable, relancez un déploiement : *Deployments → ⋯ → Redeploy*.
 
 ### Tâche automatique hebdomadaire
@@ -258,8 +274,9 @@ pour tester, ou si le site a été en panne plusieurs jours. Il ne se lance jama
 ## Étape 6 — Quitter Lovable (seulement quand tout marche)
 
 1. Utilisez la nouvelle version quelques jours.
-2. Fusionnez la branche de travail dans `main` (par une *pull request* sur GitHub), puis remettez
-   `main` comme *Production Branch* sur Vercel.
+2. Fusionnez la branche de travail dans `main` (par une *pull request* sur GitHub). Vercel crée
+   alors tout seul le déploiement *Production*. Attention : l'ancienne version hébergée par Lovable
+   peut cesser de fonctionner dès cette fusion, car Lovable se resynchronise sur `main`.
 3. Dans Lovable, déconnectez GitHub du projet, puis résiliez l'abonnement. L'ancienne version
    hébergée par Lovable (et sa base Lovable Cloud) s'arrêtera : prévenez vos proches de la nouvelle
    adresse.
