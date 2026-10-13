@@ -105,9 +105,14 @@ Menu **Project Settings → API Keys** (et **Data API** pour l'URL). Notez :
 1. Allez sur <https://vercel.com/signup>, choisissez **Hobby** et **Continue with GitHub**.
 2. **Add New… → Project** → importez le dépôt `Memory-lane` (autorisez Vercel à y accéder si demandé).
 3. Avant de cliquer sur *Deploy* :
-   - *Framework Preset* : laissez la détection automatique (Vite / Nitro). Ne changez pas les
-     commandes de build.
+   - *Framework Preset* : laissez la détection automatique (Vite, Nitro ou Other : les trois
+     marchent). Ne changez pas les commandes de build : les interrupteurs *Override* restent éteints.
    - Ouvrez **Environment Variables** et ajoutez les variables du tableau ci-dessous.
+     Collez les valeurs **sans guillemets**, et laissez cochés *Production*, *Preview* et *Development*.
+   - **Branche :** tant que les changements ne sont pas fusionnés, la branche `main` contient
+     encore l'ancienne version Lovable, qui ne se construit pas sur Vercel. Si l'écran propose
+     de choisir la branche, prenez `claude/hopeful-bardeen-ddyvra`. Sinon, ce n'est pas grave :
+     voir « Vérifier » plus bas.
 4. Cliquez sur **Deploy**. Au bout de 2 à 3 minutes, Vercel affiche l'adresse du site
    (par ex. `memory-lane-xxxx.vercel.app`). Vous pouvez choisir un nom plus joli dans
    *Settings → Domains* (gratuit si l'adresse se termine par `.vercel.app`).
@@ -132,6 +137,28 @@ servira aussi à l'étape 4. (Il faut au moins 32 caractères, sinon le nettoyag
 
 > **Important** : les variables qui commencent par `VITE_` sont visibles dans le navigateur.
 > Ne mettez **jamais** `VITE_` devant la clé secrète Supabase ni devant `CRON_SECRET`.
+
+### Vérifier que l'étape 3 est bien faite
+
+1. **Variables** : *Settings → Environment Variables*. Vous devez voir 6 noms (8 avec PostHog), écrits
+   exactement comme dans le tableau (majuscules, sans espace). Les valeurs des variables *Sensitive*
+   s'affichent masquées : c'est normal.
+2. **Bonne branche** : onglet *Deployments*. Le déploiement doit porter le nom de branche
+   `claude/hopeful-bardeen-ddyvra` et l'étiquette *Production*. Sinon : *Settings → Git → Production
+   Branch* (ou *Settings → Environments → Production → Branch Tracking*, selon la version de
+   l'interface), mettez cette branche, puis *Deployments → ⋯ → Redeploy*.
+3. **Construction réussie** : cliquez sur le déploiement. Il doit être *Ready* (vert). En cas
+   d'échec, ouvrez *Build Logs* et copiez les dernières lignes rouges dans la conversation.
+4. **Le site répond** : ouvrez l'adresse du site, puis `/privacy`. Si une page affiche
+   « Missing Supabase environment variable(s) : … », le message nomme la variable oubliée ou mal
+   écrite. Corrigez-la, puis *Redeploy* (une variable modifiée n'agit qu'après un nouveau déploiement).
+5. **Test complet des clés secrètes** : *Settings → Cron Jobs*. La tâche
+   `/api/public/hooks/cleanup-photos` doit y apparaître. Cliquez sur **Run** : le résultat doit être
+   `200` (réponse `{"deleted":0}` dans les *Logs*). Cela prouve que `CRON_SECRET`,
+   `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` sont corrects. Si le résultat est `401`,
+   `CRON_SECRET` manque ou fait moins de 32 caractères ; si c'est `500`, regardez l'URL et la clé
+   secrète Supabase.
+   (Les tâches planifiées n'existent que sur le déploiement *Production*, d'où le point 2.)
 
 ### Régions et branche
 
