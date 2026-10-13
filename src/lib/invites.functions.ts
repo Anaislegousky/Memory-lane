@@ -119,10 +119,15 @@ const createInviteInput = z.object({
   event_id: z.string().uuid().optional().nullable(),
 });
 
+// Un lien ne peut servir qu'à un nombre limité de personnes (même si le lien est transféré).
+const INVITE_MAX_USES = 20;
+
 function genToken() {
   const a = new Uint8Array(16);
   crypto.getRandomValues(a);
-  return Array.from(a, (b) => b.toString(36).padStart(2, "0")).join("").slice(0, 22);
+  return Array.from(a, (b) => b.toString(36).padStart(2, "0"))
+    .join("")
+    .slice(0, 22);
 }
 
 function genSecretCode() {
@@ -138,8 +143,22 @@ export const createInvite = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => createInviteInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    if (data.scope === "event" && !data.event_id) {
-      throw new Error("event_id is required for event-scoped invites");
+    // Les invités (comptes anonymes) ne peuvent pas inviter : jusqu'ici seul le bouton
+    // était caché dans l'interface, rien n'empêchait d'appeler directement le serveur.
+    if (context.claims.is_anonymous) {
+      throw new Error("Créez un compte pour inviter d'autres personnes");
+    }
+    if (data.scope === "event") {
+      if (!data.event_id) throw new Error("event_id is required for event-scoped invites");
+      // Seul le propriétaire de l'événement peut créer un lien pour cet événement.
+      const { data: ev } = await supabaseAdmin
+        .from("events")
+        .select("owner_id")
+        .eq("id", data.event_id)
+        .maybeSingle();
+      if (!ev || ev.owner_id !== context.userId) {
+        throw new Error("Seul le propriétaire de l'événement peut créer une invitation");
+      }
     }
     const token = genToken();
     const secret_code = genSecretCode();
@@ -151,6 +170,7 @@ export const createInvite = createServerFn({ method: "POST" })
       scope: data.scope,
       event_id: data.scope === "event" ? data.event_id! : null,
       expires_at,
+      max_uses: INVITE_MAX_USES,
     });
     if (error) throw new Error(error.message);
     return { token, secret_code, expires_at };
