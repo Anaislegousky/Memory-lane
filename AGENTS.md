@@ -18,6 +18,9 @@ La propriétaire n'a pas de profil technique : expliquer simplement et documente
   (pas de préfixe `VITE_`, client admin importé seulement dans du code serveur).
 - Toute modification du schéma passe par un nouveau fichier dans `supabase/migrations/`,
   avec RLS activé sur les nouvelles tables.
+- Titre des pull requests : en français, une phrase claire qui dit ce que ça change pour
+  l'utilisatrice (ex. « Retirer le GPS des photos envoyées »), jamais un nom technique ou un
+  nom de branche. Le corps de la PR commence par un court « Pourquoi » et « Ce qui change ».
 - Avant de pousser : `bun install`, `bun run build`, `bunx tsc --noEmit`, `bunx eslint <fichiers modifiés>`.
 
 ## Documentation
