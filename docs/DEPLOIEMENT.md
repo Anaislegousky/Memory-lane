@@ -138,6 +138,16 @@ servira aussi à l'étape 4. (Il faut au moins 32 caractères, sinon le nettoyag
 > **Important** : les variables qui commencent par `VITE_` sont visibles dans le navigateur.
 > Ne mettez **jamais** `VITE_` devant la clé secrète Supabase ni devant `CRON_SECRET`.
 
+### Ne pas utiliser l'intégration « Supabase » de Vercel
+
+Vercel propose des boutons du genre *Add Supabase*, *Storage* ou *Marketplace → Supabase*.
+**N'y touchez pas.** Ils créeraient un nouveau projet ou de nouvelles variables avec d'autres noms
+(`POSTGRES_URL`, `SUPABASE_ANON_KEY`…) que l'application ne lit pas, et pas forcément à Paris.
+Votre projet Supabase existe déjà et l'espace photos (`event-photos`) est déjà créé dans Supabase
+par la migration n° 9 : on relie les deux en recopiant à la main les variables du tableau ci-dessus.
+Si ces variables ont été ajoutées par erreur par l'intégration, supprimez-les (*Settings →
+Integrations*) et gardez uniquement les vôtres.
+
 ### Vérifier que l'étape 3 est bien faite
 
 1. **Variables** : *Settings → Environment Variables*. Vous devez voir 6 noms (8 avec PostHog), écrits
