@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ComparisonRouteImport } from './routes/comparison'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticated.feedback'
 import { Route as AuthenticatedMapRouteImport } from './routes/_authenticated.map'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -46,6 +47,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedFeedbackRoute = AuthenticatedFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedMapRoute = AuthenticatedMapRouteImport.update({
   id: '/map',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/comparison': typeof ComparisonRoute
   '/privacy': typeof PrivacyRoute
+  '/feedback': typeof AuthenticatedFeedbackRoute
   '/map': typeof AuthenticatedMapRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/comparison': typeof ComparisonRoute
   '/privacy': typeof PrivacyRoute
+  '/feedback': typeof AuthenticatedFeedbackRoute
   '/map': typeof AuthenticatedMapRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/comparison': typeof ComparisonRoute
   '/privacy': typeof PrivacyRoute
+  '/_authenticated/feedback': typeof AuthenticatedFeedbackRoute
   '/_authenticated/map': typeof AuthenticatedMapRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/comparison'
     | '/privacy'
+    | '/feedback'
     | '/map'
     | '/profile'
     | '/auth/callback'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/comparison'
     | '/privacy'
+    | '/feedback'
     | '/map'
     | '/profile'
     | '/auth/callback'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/comparison'
     | '/privacy'
+    | '/_authenticated/feedback'
     | '/_authenticated/map'
     | '/_authenticated/profile'
     | '/auth/callback'
@@ -226,6 +238,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/feedback': {
+      id: '/_authenticated/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof AuthenticatedFeedbackRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/map': {
       id: '/_authenticated/map'
@@ -287,6 +306,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedFeedbackRoute: typeof AuthenticatedFeedbackRoute
   AuthenticatedMapRoute: typeof AuthenticatedMapRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedEventsIdRoute: typeof AuthenticatedEventsIdRoute
@@ -295,6 +315,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedFeedbackRoute: AuthenticatedFeedbackRoute,
   AuthenticatedMapRoute: AuthenticatedMapRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedEventsIdRoute: AuthenticatedEventsIdRoute,

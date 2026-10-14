@@ -65,6 +65,7 @@ La base est vide. Il faut lui donner la structure de Memories, décrite dans le 
    8. `20260630010727_…sql`
    9. `20261013120000_create_event_photos_bucket.sql` (espace de stockage des photos)
    10. `20261013120100_keepalive_function.sql` (évite la mise en pause)
+   11. `20261014090000_create_feedback.sql` (retours des utilisateurs)
 4. Vérifiez : menu **Table Editor** → vous devez voir `events`, `photos`, `profiles`, etc.
    Menu **Storage** → un bucket `event-photos` marqué *Private*.
 
@@ -127,6 +128,8 @@ Menu **Project Settings → API Keys** (et **Data API** pour l'URL). Notez :
 | `SUPABASE_PUBLISHABLE_KEY` | la même clé publique | lue par le serveur |
 | `SUPABASE_SERVICE_ROLE_KEY` | clé `sb_secret_…` | **secrète**, cochez *Sensitive* |
 | `CRON_SECRET` | une longue chaîne aléatoire (voir ci-dessous) | **secrète**, cochez *Sensitive* |
+| `BREVO_API_KEY` | clé API Brevo (étape 3 bis) | **secrète**, facultatif |
+| `FEEDBACK_NOTIFY_EMAIL` | votre adresse e-mail | facultatif |
 | `VITE_POSTHOG_KEY` | clé `phc_…` de PostHog (étape 3) | facultatif |
 | `VITE_POSTHOG_HOST` | `https://eu.i.posthog.com` | facultatif |
 
@@ -235,6 +238,29 @@ Connectez-vous sur <https://eu.posthog.com> avec votre compte :
 - **Product analytics → New insight** : par exemple, compter les clics sur le bouton « Inviter ».
 
 Seules les personnes ayant accepté la bannière apparaissent : les chiffres sont donc partiels.
+
+---
+
+## Étape 3 bis — Recevoir les bugs et idées des utilisateurs
+
+Dans l'app, *Profil → Signaler un bug ou proposer une idée* ouvre un petit formulaire (type, message,
+e-mail facultatif), aussi pour les invités. Chaque message est enregistré dans la table `feedback`
+de Supabase, sans aucune action de votre part.
+
+**Les lire** : Supabase → *Table Editor* → `feedback`, triez par `created_at`. La colonne `status`
+(`new`, `in_progress`, `done`) sert à suivre ce que vous avez traité : modifiez-la à la main.
+Personne d'autre que vous ne peut lire cette table.
+
+**Être prévenue par e-mail** (facultatif) :
+1. Créez un compte gratuit sur <https://www.brevo.com> (société française, 300 e-mails par jour gratuits).
+2. *Expéditeurs, domaines et IP → Expéditeurs* : ajoutez votre adresse e-mail et validez-la avec le
+   code reçu.
+3. *Paramètres → SMTP et API → Clés API* : créez une clé.
+4. Dans Vercel, ajoutez `BREVO_API_KEY` (la clé, cochez *Sensitive*) et `FEEDBACK_NOTIFY_EMAIL`
+   (votre adresse validée), puis *Redeploy*.
+
+Sans ces deux variables, tout marche, sans e-mail. Si l'e-mail n'arrive pas, le message est quand même
+dans Supabase ; regardez aussi les spams. Limite : 5 messages par heure et par personne.
 
 ---
 
