@@ -111,10 +111,7 @@ Menu **Project Settings → API Keys** (et **Data API** pour l'URL). Notez :
      marchent). Ne changez pas les commandes de build : les interrupteurs *Override* restent éteints.
    - Ouvrez **Environment Variables** et ajoutez les variables du tableau ci-dessous.
      Collez les valeurs **sans guillemets**, et laissez cochés *Production*, *Preview* et *Development*.
-   - **Branche :** tant que les changements ne sont pas fusionnés, la branche `main` contient
-     encore l'ancienne version Lovable, qui ne se construit pas sur Vercel. Si l'écran propose
-     de choisir la branche, prenez `claude/hopeful-bardeen-ddyvra`. Sinon, ce n'est pas grave :
-     voir « Vérifier » plus bas.
+   - **Branche :** laissez `main`, qui devient la version « Production » du site.
 4. Cliquez sur **Deploy**. Au bout de 2 à 3 minutes, Vercel affiche l'adresse du site
    (par ex. `memory-lane-xxxx.vercel.app`). Vous pouvez choisir un nom plus joli dans
    *Settings → Domains* (gratuit si l'adresse se termine par `.vercel.app`).
@@ -156,10 +153,8 @@ Integrations*) et gardez uniquement les vôtres.
    exactement comme dans le tableau (majuscules, sans espace). Les valeurs des variables *Sensitive*
    s'affichent masquées : c'est normal.
 2. **Bonne branche** : onglet *Deployments*. Sur Vercel, le site « Production » est celui de la
-   branche par défaut de GitHub (`main`). Tant que les changements ne sont pas fusionnés, le
-   déploiement de la branche de travail (`claude/hopeful-bardeen-ddyvra`) est donc un
-   déploiement d'essai (*Preview*), et c'est normal : voir « Tester avant la mise en production ».
-   Vous ne trouvez pas de réglage « Production Branch » dans *Settings → Git* ? Cherchez
+   branche par défaut de GitHub (`main`). Les autres branches donnent des déploiements d'essai
+   (*Preview*) : voir « Tester avant la mise en production ». Vous ne trouvez pas de réglage « Production Branch » dans *Settings → Git* ? Cherchez
    *Settings → Environments → Production → Branch Tracking*. S'il n'existe pas non plus, suivez
    « Tester avant la mise en production ».
 3. **Construction réussie** : cliquez sur le déploiement. Il doit être *Ready* (vert). En cas
@@ -188,8 +183,8 @@ puis sur **Visit**. Deux particularités :
 - Chaque déploiement d'essai a une adresse différente. Pour l'adresse de connexion de Supabase,
   attendez la mise en production : l'adresse définitive sera `https://memory-lane….vercel.app`.
 
-Quand tout marche, fusionnez la branche dans `main` (étape 6) : Vercel crée alors le déploiement
-*Production*, avec l'adresse définitive et la tâche du lundi.
+Quand tout marche, fusionnez la branche dans `main` (par une *pull request* sur GitHub) : Vercel crée
+alors le déploiement *Production*, avec l'adresse définitive et la tâche du lundi.
 
 ### Régions et branche
 
@@ -289,14 +284,15 @@ pour tester, ou si le site a été en panne plusieurs jours. Il ne se lance jama
 
 ---
 
-## Étape 6 — Quitter Lovable (seulement quand tout marche)
+## Étape 6 — Quitter Lovable (terminée en octobre 2026)
 
-1. Utilisez la nouvelle version quelques jours.
-2. Fusionnez la branche de travail dans `main` (par une *pull request* sur GitHub). Vercel crée
-   alors tout seul le déploiement *Production*. Attention : l'ancienne version hébergée par Lovable
-   peut cesser de fonctionner dès cette fusion, car Lovable se resynchronise sur `main`.
-3. Dans Lovable, déconnectez GitHub du projet, puis résiliez l'abonnement. L'ancienne version
-   hébergée par Lovable (et sa base Lovable Cloud) s'arrêtera : prévenez vos proches de la nouvelle
+Cette étape est faite : GitHub est déconnecté de Lovable, et `main` n'est plus synchronisée avec lui.
+Pour mémoire, voici ce qu'elle comprenait :
+
+1. Utiliser la nouvelle version quelques jours.
+2. Fusionner la branche de travail dans `main`, ce qui crée le déploiement *Production* sur Vercel.
+3. Dans Lovable, déconnecter GitHub du projet puis résilier l'abonnement. L'ancienne version
+   hébergée par Lovable (et sa base Lovable Cloud) s'arrête : prévenir ses proches de la nouvelle
    adresse.
 
 ---

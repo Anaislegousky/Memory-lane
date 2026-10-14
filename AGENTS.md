@@ -12,8 +12,8 @@ La propriétaire n'a pas de profil technique : expliquer simplement et documente
 
 ## Règles
 
-- Ne jamais réécrire l'historique git déjà poussé (force push, rebase, amend) : la branche
-  `main` est encore synchronisée avec Lovable tant que le projet n'y est pas déconnecté.
+- Ne jamais réécrire l'historique git déjà poussé (force push, rebase, amend) : `main` est la
+  branche de production Vercel. Le projet n'est plus relié à Lovable (déconnecté en octobre 2026).
 - Ne jamais exposer `SUPABASE_SERVICE_ROLE_KEY` ni `CRON_SECRET` au navigateur
   (pas de préfixe `VITE_`, client admin importé seulement dans du code serveur).
 - Toute modification du schéma passe par un nouveau fichier dans `supabase/migrations/`,
