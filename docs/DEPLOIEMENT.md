@@ -65,6 +65,8 @@ La base est vide. Il faut lui donner la structure de Memories, décrite dans le 
    8. `20260630010727_…sql`
    9. `20261013120000_create_event_photos_bucket.sql` (espace de stockage des photos)
    10. `20261013120100_keepalive_function.sql` (évite la mise en pause)
+   11. `20261014090000_create_feedback.sql` (retours des utilisateurs)
+   12. `20261014120000_feedback_page.sql` (page d'où vient le retour)
 4. Vérifiez : menu **Table Editor** → vous devez voir `events`, `photos`, `profiles`, etc.
    Menu **Storage** → un bucket `event-photos` marqué *Private*.
 
@@ -235,6 +237,22 @@ Connectez-vous sur <https://eu.posthog.com> avec votre compte :
 - **Product analytics → New insight** : par exemple, compter les clics sur le bouton « Inviter ».
 
 Seules les personnes ayant accepté la bannière apparaissent : les chiffres sont donc partiels.
+
+---
+
+## Étape 3 bis — Recevoir les bugs et idées des utilisateurs
+
+Sur toutes les pages de l'app, un petit bouton rond 💬 en bas à droite (et *Profil → Signaler un bug
+ou proposer une idée*) ouvre un formulaire : type, message, e-mail facultatif. Il marche aussi pour
+les invités et les visiteurs sans compte. Aucune variable d'environnement n'est nécessaire.
+
+**Les lire** : Supabase → *Table Editor* → `feedback`, triez par `created_at`. Chaque ligne contient le
+message, le type, l'e-mail laissé (pour répondre), la page où se trouvait la personne (`page`) et son
+navigateur (`user_agent`). La colonne `status` (`new`, `in_progress`, `done`) sert à suivre ce que vous
+avez traité : modifiez-la à la main. Personne d'autre que vous ne peut lire cette table.
+
+Il n'y a pas d'e-mail d'alerte : pensez à jeter un œil à la table de temps en temps. Limite : 5
+messages par heure et par personne.
 
 ---
 

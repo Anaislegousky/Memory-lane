@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { AppShell } from "@/components/AppShell";
 import { InviteShareSheet } from "@/components/InviteShareSheet";
+import { OPEN_FEEDBACK_EVENT } from "@/components/FeedbackButton";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { LogOut, Share2, Download, Trash2, Bell } from "lucide-react";
+import { LogOut, Share2, Download, Trash2, Bell, MessageSquare } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profil — Memories" }] }),
@@ -254,6 +255,16 @@ function ProfilePage() {
 
 
 
+
+          <button
+            onClick={() => window.dispatchEvent(new Event(OPEN_FEEDBACK_EVENT))}
+            className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left"
+          >
+            <span className="flex items-center gap-3">
+              <MessageSquare className="h-5 w-5" /> Signaler un bug ou proposer une idée
+            </span>
+            <span className="text-xs text-muted-foreground">›</span>
+          </button>
 
           <button
             onClick={signOut}
