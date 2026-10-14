@@ -242,7 +242,7 @@ Seules les personnes ayant accepté la bannière apparaissent : les chiffres son
 
 ## Étape 3 bis — Recevoir les bugs et idées des utilisateurs
 
-Sur toutes les pages de l'app, un petit bouton rond 💬 en bas à gauche (et *Profil → Signaler un bug
+Sur toutes les pages de l'app, un petit bouton rond 💬 en bas à droite (et *Profil → Signaler un bug
 ou proposer une idée*) ouvre un formulaire : type, message, e-mail facultatif. Il marche aussi pour
 les invités et les visiteurs sans compte. Aucune variable d'environnement n'est nécessaire.
 

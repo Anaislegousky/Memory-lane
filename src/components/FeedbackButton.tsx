@@ -80,7 +80,7 @@ export function FeedbackButton() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Signaler un bug ou proposer une idée"
-        className="fixed bottom-24 left-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/95 text-muted-foreground shadow-md backdrop-blur active:scale-95"
+        className="fixed bottom-24 right-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/95 text-muted-foreground shadow-md backdrop-blur active:scale-95"
       >
         <MessageSquare className="h-5 w-5" />
       </button>
