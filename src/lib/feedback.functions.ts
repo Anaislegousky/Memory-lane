@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const feedbackInput = z.object({
   kind: z.enum(["bug", "idea", "other"]),
@@ -13,80 +12,58 @@ const feedbackInput = z.object({
     .email()
     .optional()
     .or(z.literal("").transform(() => undefined)),
+  page: z.string().max(300).optional(),
 });
 
-const KIND_LABEL = { bug: "Bug", idea: "Idée", other: "Autre" } as const;
-const MAX_PER_HOUR = 5;
+const MAX_PER_HOUR_PER_USER = 5;
+// Visiteurs sans session (page d'accueil, connexion…) : plafond commun à tous.
+const MAX_PER_HOUR_ANONYMOUS = 20;
 
-// Prévient la propriétaire par e-mail (service Brevo, hébergé en France).
-// Facultatif : sans BREVO_API_KEY / FEEDBACK_NOTIFY_EMAIL, le retour est seulement enregistré.
-// Une panne d'e-mail ne doit jamais faire échouer l'envoi du retour : il est déjà en base.
-async function notifyByEmail(f: {
-  kind: keyof typeof KIND_LABEL;
-  message: string;
-  contact_email?: string;
-  user_agent: string | null;
-}) {
-  const apiKey = process.env.BREVO_API_KEY;
-  const to = process.env.FEEDBACK_NOTIFY_EMAIL;
-  if (!apiKey || !to) return;
-  try {
-    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "api-key": apiKey,
-        "content-type": "application/json",
-        accept: "application/json",
-      },
-      body: JSON.stringify({
-        sender: { name: "Memories", email: to },
-        to: [{ email: to }],
-        ...(f.contact_email ? { replyTo: { email: f.contact_email } } : {}),
-        subject: `[Memories] ${KIND_LABEL[f.kind]} : nouveau retour`,
-        textContent: [
-          f.message,
-          "",
-          `Contact : ${f.contact_email ?? "non renseigné"}`,
-          `Appareil : ${f.user_agent ?? "inconnu"}`,
-          "",
-          "Tous les retours : Supabase → Table Editor → feedback",
-        ].join("\n"),
-      }),
-    });
-    if (!res.ok)
-      console.error("[feedback] Brevo a refusé l'e-mail :", res.status, await res.text());
-  } catch (err) {
-    console.error("[feedback] Envoi de l'e-mail impossible :", err);
-  }
+// Garde seulement le chemin de la page, sans jeton d'invitation ni identifiant d'événement.
+function cleanPage(page: string | undefined) {
+  if (!page) return null;
+  const path = page.split(/[?#]/)[0];
+  return path
+    .replace(/^\/join\/[^/]+/, "/join/:token")
+    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ":id")
+    .slice(0, 100);
 }
 
+// L'envoi est ouvert à tous, même sans session : on relie le message au compte seulement
+// si un jeton valide est présent.
 export const sendFeedback = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => feedbackInput.parse(data))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Anti-abus simple : 5 retours par heure et par compte (les invités ont un compte anonyme).
-    const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const { count } = await supabaseAdmin
-      .from("feedback")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", context.userId)
-      .gte("created_at", since);
-    if ((count ?? 0) >= MAX_PER_HOUR) {
-      throw new Error("Vous avez déjà envoyé plusieurs messages, réessayez un peu plus tard.");
+    const request = getRequest();
+    const token = request?.headers.get("authorization")?.replace(/^Bearer /, "");
+    let userId: string | null = null;
+    if (token) {
+      const { data: auth } = await supabaseAdmin.auth.getUser(token);
+      userId = auth.user?.id ?? null;
     }
 
-    const userAgent = getRequest()?.headers.get("user-agent")?.slice(0, 300) ?? null;
+    const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    let recent = supabaseAdmin
+      .from("feedback")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", since);
+    recent = userId ? recent.eq("user_id", userId) : recent.is("user_id", null);
+    const { count } = await recent;
+    if ((count ?? 0) >= (userId ? MAX_PER_HOUR_PER_USER : MAX_PER_HOUR_ANONYMOUS)) {
+      throw new Error("Trop de messages envoyés, réessayez un peu plus tard.");
+    }
+
     const { error } = await supabaseAdmin.from("feedback").insert({
-      user_id: context.userId,
+      user_id: userId,
       kind: data.kind,
       message: data.message,
       contact_email: data.contact_email ?? null,
-      user_agent: userAgent,
+      page: cleanPage(data.page),
+      user_agent: request?.headers.get("user-agent")?.slice(0, 300) ?? null,
     });
     if (error) throw new Error("Impossible d'enregistrer votre message pour le moment.");
 
-    await notifyByEmail({ ...data, user_agent: userAgent });
     return { ok: true };
   });

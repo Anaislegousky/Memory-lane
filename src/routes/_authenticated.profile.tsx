@@ -1,9 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { AppShell } from "@/components/AppShell";
 import { InviteShareSheet } from "@/components/InviteShareSheet";
+import { OPEN_FEEDBACK_EVENT } from "@/components/FeedbackButton";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LogOut, Share2, Download, Trash2, Bell, MessageSquare } from "lucide-react";
@@ -255,15 +256,15 @@ function ProfilePage() {
 
 
 
-          <Link
-            to="/feedback"
+          <button
+            onClick={() => window.dispatchEvent(new Event(OPEN_FEEDBACK_EVENT))}
             className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left"
           >
             <span className="flex items-center gap-3">
               <MessageSquare className="h-5 w-5" /> Signaler un bug ou proposer une idée
             </span>
             <span className="text-xs text-muted-foreground">›</span>
-          </Link>
+          </button>
 
           <button
             onClick={signOut}

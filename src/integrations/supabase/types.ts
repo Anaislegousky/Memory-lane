@@ -133,6 +133,7 @@ export type Database = {
           id: string
           kind: string
           message: string
+          page: string | null
           status: string
           user_agent: string | null
           user_id: string | null
@@ -143,6 +144,7 @@ export type Database = {
           id?: string
           kind: string
           message: string
+          page?: string | null
           status?: string
           user_agent?: string | null
           user_id?: string | null
@@ -153,6 +155,7 @@ export type Database = {
           id?: string
           kind?: string
           message?: string
+          page?: string | null
           status?: string
           user_agent?: string | null
           user_id?: string | null

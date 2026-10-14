@@ -76,12 +76,11 @@ function PrivacyPage() {
         <div>
           <h2 className="font-display text-xl">Vos retours (bugs et idées)</h2>
           <p className="mt-2 text-sm">
-            Si vous nous écrivez depuis « Signaler un bug ou proposer une idée », nous enregistrons
-            votre message, l'e-mail que vous choisissez éventuellement d'indiquer et le type
-            d'appareil et de navigateur utilisé. Ils servent uniquement à corriger et améliorer
-            Memories, et à vous répondre si vous l'avez demandé. Un e-mail de notification est
-            envoyé à la personne qui gère l'application via Brevo (société française). Si vous
-            supprimez votre compte, votre message reste mais n'est plus relié à vous.
+            Si vous nous écrivez depuis le bouton « Signaler un bug ou proposer une idée », nous
+            enregistrons votre message, l'e-mail que vous choisissez éventuellement d'indiquer, la
+            page où vous vous trouviez et le type d'appareil et de navigateur utilisé. Ils servent
+            uniquement à corriger et améliorer Memories, et à vous répondre si vous l'avez demandé.
+            Si vous supprimez votre compte, votre message reste mais n'est plus relié à vous.
           </p>
         </div>
         <div>

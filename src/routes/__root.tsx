@@ -21,6 +21,7 @@ import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/components/AuthProvider";
 import { CookieBanner } from "@/components/CookieBanner";
+import { FeedbackButton } from "@/components/FeedbackButton";
 
 function NotFoundComponent() {
   return (
@@ -146,6 +147,7 @@ function RootComponent() {
         <SessionKeeper />
         <Outlet />
         <Toaster position="top-center" />
+        <FeedbackButton />
         <CookieBanner />
       </AuthProvider>
     </QueryClientProvider>
